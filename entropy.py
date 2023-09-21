@@ -31,6 +31,8 @@ def makehist(fh, flen):
 
 
 def entropy(hist, histlen, len):
+    current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
+    logging.info(f"Currently executing: {current_function_name}")
     H = 0
     for i in range(histlen):
         p = hist[i] / len

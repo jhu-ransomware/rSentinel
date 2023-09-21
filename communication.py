@@ -4,8 +4,13 @@ import hashlib
 import socket
 import struct
 import constants
+import inspect
+import logging
 
 def request_arr(sock):
+    current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
+    logging.info(f"Currently executing: {current_function_name}")
+
     req_msg_data = struct.pack('!I', constants.REQUEST_MSG)
     sock.send(req_msg_data)
 

@@ -11,8 +11,15 @@ import entropy
 import diagnose
 import communication
 import monitor
+import logging
+import inspect
+
+tested_up = [0] * constants.NUM_NODES
 
 def start_algo(faulty, connections, num_connections, node_num):
+    current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
+    logging.info(f"Currently executing: {current_function_name}")
+
     global FAULTY
     FAULTY = faulty
 
@@ -33,6 +40,9 @@ def start_algo(faulty, connections, num_connections, node_num):
     files = [f for f in files if f not in ['.', '..']]
     file_count = len(files)
 
+    logging.info(f"File count in 'test' directory: {file_count}")
+    
+
     file_lookup = []
     for file in files:
         temp_filename = os.path.join(path, file)
@@ -50,6 +60,9 @@ def start_algo(faulty, connections, num_connections, node_num):
 
 
 def adaptive_dsd(faulty, connections, num_connections, node_num, lookup):
+    current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
+    logging.info(f"Currently executing: {current_function_name}")
+
     global FAULTY
     FAULTY = faulty
 
@@ -126,6 +139,9 @@ def receiving(server_fd):
 
 
 def update_arr(connections, num_connections, node_num):
+    current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
+    logging.info(f"Currently executing: {current_function_name}")
+
     found_non_faulty = False
     for i in range(num_connections):
         try:
@@ -157,6 +173,9 @@ def update_arr(connections, num_connections, node_num):
 
 
 def update_tested_up(new_arr, node, tested_node):
+    current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
+    logging.info(f"Currently executing: {current_function_name}")
+    
     constants.tested_up[node] = tested_node
     
     for i in range(constants.NUM_NODES):

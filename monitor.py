@@ -1,7 +1,12 @@
 import constants
 import entropy
+import inspect
+import logging
 
 def run_detection(entrophies):
+    current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
+    logging.info(f"Currently executing: {current_function_name}")
+
     encrp_files = update_entropy(entrophies)
     if encrp_files / len(entrophies) > constants.ENTROPHY_INCREASE_BATCH:
         return 1
