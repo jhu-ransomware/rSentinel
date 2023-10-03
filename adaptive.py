@@ -102,7 +102,7 @@ def adaptive_dsd(faulty, connections, num_connections, node_num, lookup):
         if curr_time > constants.TESTING_INTERVAL:
             update_arr(connections, num_connections, node_num)
             if constants.DEMO:
-                diagnosis = diagnose(constants.tested_up, node_num)
+                diagnosis = diagnose(tested_up, node_num)
                 communication.send_msg_to_demo_node(constants.DEMO_IP, node_num, diagnosis, constants.NUM_NODES)
 
             # update lookup table
@@ -122,6 +122,8 @@ def receiving(server_fd):
     current_sockets = [server_fd]
     k = 0
 
+    global tested_up
+
     while True:
         k += 1
         ready_sockets, _, _ = select.select(current_sockets, [], [])
@@ -135,7 +137,7 @@ def receiving(server_fd):
                 if msg_type == "TEST_MSG":
                     communication.send_fault_status(s, FAULTY)
                 elif msg_type == "REQUEST_MSG":
-                    communication.send_array(s, constants.tested_up, constants.NUM_NODES)
+                    communication.send_array(s, tested_up, constants.NUM_NODES)
                 s.close()
                 current_sockets.remove(s)
 
@@ -146,6 +148,8 @@ def receiving(server_fd):
 def update_arr(connections, num_connections, node_num):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
     logging.info(f"Currently executing: {current_function_name}")
+
+    global tested_up
 
     found_non_faulty = False
     for i in range(num_connections):
@@ -173,7 +177,7 @@ def update_arr(connections, num_connections, node_num):
             print(f"Socket error: {e}")
 
     if not found_non_faulty:
-        constants.tested_up[node_num] = -1
+        tested_up[node_num] = -1
         print("Every connected node is faulty")
 
 
@@ -181,20 +185,22 @@ def update_tested_up(new_arr, node, tested_node):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
     logging.info(f"Currently executing: {current_function_name}")
 
-    constants.tested_up[node] = tested_node
+    global tested_up
+
+    tested_up[node] = tested_node
     
     for i in range(constants.NUM_NODES):
         if i < constants.NUM_NODES - 1:
-            print(constants.tested_up[i], end=' ')
+            print(tested_up[i], end=' ')
         else:
-            print(constants.tested_up[i])
+            print(tested_up[i])
 
     for i in range(constants.NUM_NODES):
         if i != node:
-            constants.tested_up[i] = new_arr[i]
+            tested_up[i] = new_arr[i]
 
     for i in range(constants.NUM_NODES):
         if i < constants.NUM_NODES - 1:
-            print(constants.tested_up[i], end=' ')
+            print(tested_up[i], end=' ')
         else:
-            print(constants.tested_up[i])
+            print(tested_up[i])
