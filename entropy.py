@@ -41,6 +41,8 @@ def entropy(hist, histlen, len):
     return H
 
 def calc_entropy_file(filename):
+    current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
+    logging.info(f"Currently executing: {current_function_name}")
     logging.info("File currently being read: %s", filename)
     try:
         with open(filename, 'rb') as fh:

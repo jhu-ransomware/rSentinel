@@ -14,14 +14,17 @@ import monitor
 import logging
 import inspect
 
-tested_up = [0] * constants.NUM_NODES
+tested_up = None
 
 def start_algo(faulty, connections, num_connections, node_num):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
     logging.info(f"Currently executing: {current_function_name}")
 
     global FAULTY
+    global tested_up
+
     FAULTY = faulty
+    tested_up = [-1] * constants.NUM_NODES
 
     server_fd = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -64,6 +67,8 @@ def adaptive_dsd(faulty, connections, num_connections, node_num, lookup):
     logging.info(f"Currently executing: {current_function_name}")
 
     global FAULTY
+    global tested_up
+
     FAULTY = faulty
 
     print("\n*****At any point in time enter a new fault status (1 or 0) or 2 to diagnose:*****")
@@ -84,7 +89,7 @@ def adaptive_dsd(faulty, connections, num_connections, node_num, lookup):
             #     print(f"Fault status changed to {FAULTY}")
 
             if input_value == 2:
-                diagnosis = diagnose(constants.tested_up, node_num)
+                diagnosis = diagnose.diagnose(tested_up, node_num)
                 print("Diagnosis:")
                 for i in range(constants.NUM_NODES):
                     if diagnosis[i] == 1:
@@ -175,7 +180,7 @@ def update_arr(connections, num_connections, node_num):
 def update_tested_up(new_arr, node, tested_node):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
     logging.info(f"Currently executing: {current_function_name}")
-    
+
     constants.tested_up[node] = tested_node
     
     for i in range(constants.NUM_NODES):
