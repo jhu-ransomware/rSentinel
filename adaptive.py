@@ -80,7 +80,7 @@ def adaptive_dsd(faulty, connections, num_connections, node_num, lookup):
         curr_time = end - start
 
         # Check for user input using select
-        if msvcrt.khbit():
+        if msvcrt.kbhit():
             input_value = int(input())
             
             # Commenting out below for now to not allow manual update of fault
