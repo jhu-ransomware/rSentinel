@@ -13,7 +13,7 @@ import communication
 import monitor
 import logging
 import inspect
-import selectors
+import msvcrt
 
 tested_up = None
 
@@ -75,19 +75,13 @@ def adaptive_dsd(faulty, connections, num_connections, node_num, lookup):
     print("\n*****At any point in time enter a new fault status (1 or 0) or 2 to diagnose:*****")
     start = time.time()
 
-    selector = selectors.DefaultSelector()
-
-    # Register sys.stdin for read events
-    selector.register(sys.stdin, selectors.EVENT_READ)
-
     while True:
         end = time.time()
         curr_time = end - start
 
         # Check for user input using select
-        for key, _ in selector.select(0):
-            if key.fileobj is sys.stdin:
-                input_value = int(input())
+        if msvcrt.khbit():
+            input_value = int(input())
             
             # Commenting out below for now to not allow manual update of fault
             # if input_value in [0, 1]:
