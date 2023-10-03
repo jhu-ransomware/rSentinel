@@ -16,6 +16,7 @@ import inspect
 import msvcrt
 
 tested_up = None
+DEMO = 0
 
 def start_algo(faulty, connections, num_connections, node_num):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
@@ -23,6 +24,7 @@ def start_algo(faulty, connections, num_connections, node_num):
 
     global FAULTY
     global tested_up
+    global DEMO
 
     FAULTY = faulty
     tested_up = [-1] * constants.NUM_NODES
@@ -69,6 +71,7 @@ def adaptive_dsd(faulty, connections, num_connections, node_num, lookup):
 
     global FAULTY
     global tested_up
+    global DEMO
 
     FAULTY = faulty
 
@@ -101,7 +104,7 @@ def adaptive_dsd(faulty, connections, num_connections, node_num, lookup):
                 
         if curr_time > constants.TESTING_INTERVAL:
             update_arr(connections, num_connections, node_num)
-            if constants.DEMO:
+            if DEMO:
                 diagnosis = diagnose(tested_up, node_num)
                 communication.send_msg_to_demo_node(constants.DEMO_IP, node_num, diagnosis, constants.NUM_NODES)
 
