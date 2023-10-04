@@ -105,7 +105,7 @@ def adaptive_dsd(faulty, connections, num_connections, node_num, lookup):
         if curr_time > constants.TESTING_INTERVAL:
             update_arr(connections, num_connections, node_num)
             if DEMO:
-                diagnosis = diagnose(tested_up, node_num)
+                diagnosis = diagnose.diagnose(tested_up, node_num)
                 communication.send_msg_to_demo_node(constants.DEMO_IP, node_num, diagnosis, constants.NUM_NODES)
 
             # update lookup table
