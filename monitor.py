@@ -3,19 +3,19 @@ import entropy
 import inspect
 import logging
 
-def run_detection(entrophies):
+def run_detection(entropies):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
     logging.info(f"Currently executing: {current_function_name}")
 
-    encrp_files = update_entropy(entrophies)
-    if encrp_files / len(entrophies) > constants.ENTROPHY_INCREASE_BATCH:
+    encrp_files = update_entropy(entropies)
+    if encrp_files / len(entropies) > constants.ENTROPHY_INCREASE_BATCH:
         return 1
     else:
         return 0
 
-def update_entropy(entrophies):
+def update_entropy(entropies):
     encrp_files = 0
-    for curr in entrophies:
+    for curr in entropies:
         entr = entropy.calc_entropy_file(curr['filename'])
         if entr == -1:
             encrp_files += 1

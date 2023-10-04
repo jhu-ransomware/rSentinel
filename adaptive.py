@@ -53,7 +53,7 @@ def start_algo(faulty, connections, num_connections, node_num):
     for file in files:
         temp_filename = os.path.join(path, file)
         entrophy = entropy.calc_entropy_file(temp_filename)
-        file_lookup.append({'filename': temp_filename, 'entrophy': entrophy})
+        file_lookup.append({'filename': temp_filename, 'entropy': entrophy})
 
     # Wait for user input to begin testing
     ready = 0
