@@ -17,6 +17,7 @@ import msvcrt
 
 tested_up = None
 DEMO = 0
+FAULTY = None
 
 def start_algo(faulty, connections, num_connections, node_num):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
@@ -127,26 +128,32 @@ def receiving(server_fd):
 
     global tested_up
 
-    while True:
-        k += 1
-        ready_sockets, _, _ = select.select(current_sockets, [], [])
+    try:
+        while True:
+            k += 1
+            ready_sockets, _, _ = select.select(current_sockets, [], [])
 
-        for s in ready_sockets:
-            if s == server_fd:
-                client_socket, client_address = s.accept()
-                current_sockets.append(client_socket)
-            else:
-                msg_type = communication.receive_msg(s)
-                if msg_type == "TEST_MSG":
-                    communication.send_fault_status(s, FAULTY)
-                elif msg_type == "REQUEST_MSG":
-                    communication.send_array(s, tested_up, constants.NUM_NODES)
-                s.close()
-                current_sockets.remove(s)
-
-        if k == (len(current_sockets) * 2):
-            break
-
+            for s in ready_sockets:
+                if s == server_fd:
+                    client_socket, client_address = s.accept()
+                    current_sockets.append(client_socket)
+                else:
+                    msg_type = communication.receive_msg(s)
+                    if msg_type == "TEST_MSG":
+                        communication.send_fault_status(s, FAULTY)
+                    elif msg_type == "REQUEST_MSG":
+                        communication.send_array(s, tested_up, constants.NUM_NODES)
+            if k == (len(current_sockets) * 2):
+                break
+    except socket.error as e:
+        logging.info(f"Socket error: {e}")
+    finally:
+        try:
+            logging.debug("Closing socket")
+            s.close()
+            current_sockets.remove(s)
+        except Exception as e:
+            logging.error(f"Error closing socket: {e}")
 
 def update_arr(connections, num_connections, node_num):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
