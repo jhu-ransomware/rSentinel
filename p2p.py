@@ -1,7 +1,12 @@
 import diagnose
+import sys
 import communication
 import constants
-import adaptive
+
+if sys.platform == "darwin":
+    import adaptive_mac as adaptive
+elif sys.platform == "win32":
+    import adaptive as adaptive
 
 def main():
     this_node = int(input("What's your node number:"))
@@ -20,7 +25,7 @@ def main():
         exit(1)
 
     ptr = 0
-    while nodes[ptr]['node_num'] < this_node and ptr < num_connections:
+    while ptr < num_connections and nodes[ptr]['node_num'] < this_node:
         ptr += 1
     if ptr == num_connections:
         ptr = 0
