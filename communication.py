@@ -128,16 +128,19 @@ def request_fault_status(sock):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
     logging.info(f"Currently executing: {current_function_name}")
 
+    status = None
+
     try:
         test_msg_data = struct.pack('!I', constants.TEST_MSG)  # Pack the TEST_MSG as a 4-byte integer
         sock.send(test_msg_data)
 
-        status = None
-
         status_data = sock.recv(4)  # Assuming 4 bytes for an integer, as it is in C
+        logging.info(f"Length of the status data: {len(status_data)}")
+
         if len(status_data) != 4:
+            status = struct.unpack('!I', status_data)[0]  # Unpacking the received data
+            logging.info(f"Status data: {status}")
             raise ConnectionError("Failed to receive all 4 bytes for the status")
-        status = struct.unpack('!I', status_data)[0]  # Unpacking the received data
     except ConnectionError as e:
         logging.error(f"Failed to receive all 4 bytes for the status")
     except socket.timeout as e:
