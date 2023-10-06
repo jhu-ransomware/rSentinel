@@ -132,6 +132,8 @@ def request_fault_status(sock):
         test_msg_data = struct.pack('!I', constants.TEST_MSG)  # Pack the TEST_MSG as a 4-byte integer
         sock.send(test_msg_data)
 
+        status = None
+
         status_data = sock.recv(4)  # Assuming 4 bytes for an integer, as it is in C
         if len(status_data) != 4:
             raise ConnectionError("Failed to receive all 4 bytes for the status")
