@@ -67,9 +67,8 @@ def hash_string(s):
 def send_fault_status(sock, faulty):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
     logging.info(f"Currently executing: {current_function_name}")
-    NON_FAULTY_VAL = "NON_FAULTY_VAL"  # This should be defined elsewhere in your Python code
     
-    status = struct.pack('!I', hash_string(NON_FAULTY_VAL))  # Convert to network byte order
+    status = struct.pack('!I', hash_string(constants.NON_FAULTY_VAL))  # Convert to network byte order
 
     if faulty:
         fault_val = "Lorem ipsum"
@@ -93,6 +92,7 @@ def init_client_to_server(ip_address):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
     logging.info(f"Currently executing: {current_function_name}")
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.settimeout(constants.SOCKET_TIMEOUT_GLOBAL)
 
     try:
         sock.connect((ip_address, constants.PORT))
@@ -128,13 +128,18 @@ def request_fault_status(sock):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
     logging.info(f"Currently executing: {current_function_name}")
 
-    test_msg_data = struct.pack('!I', constants.TEST_MSG)  # Pack the TEST_MSG as a 4-byte integer
-    sock.send(test_msg_data)
+    try:
+        test_msg_data = struct.pack('!I', constants.TEST_MSG)  # Pack the TEST_MSG as a 4-byte integer
+        sock.send(test_msg_data)
 
-    status_data = sock.recv(4)  # Assuming 4 bytes for an integer, as it is in C
-    if len(status_data) != 4:
-        raise ConnectionError("Failed to receive all 4 bytes for the status")
-    status = struct.unpack('!I', status_data)[0]  # Unpacking the received data
+        status_data = sock.recv(4)  # Assuming 4 bytes for an integer, as it is in C
+        if len(status_data) != 4:
+            raise ConnectionError("Failed to receive all 4 bytes for the status")
+        status = struct.unpack('!I', status_data)[0]  # Unpacking the received data
+    except ConnectionError as e:
+        logging.error(f"Failed to receive all 4 bytes for the status")
+    except socket.timeout as e:
+        logging.error(f"Socket connection timed out")
 
     if status == hash(constants.NON_FAULTY_VAL, len(constants.NON_FAULTY_VAL)):
         return 0
