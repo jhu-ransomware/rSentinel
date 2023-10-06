@@ -140,6 +140,8 @@ def request_fault_status(sock):
         logging.error(f"Failed to receive all 4 bytes for the status")
     except socket.timeout as e:
         logging.error(f"Socket connection timed out")
+    except Exception as e:
+        logging.error(f"Socket error: {e}")
 
     if status == hash(constants.NON_FAULTY_VAL, len(constants.NON_FAULTY_VAL)):
         return 0
