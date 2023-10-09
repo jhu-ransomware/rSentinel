@@ -3,10 +3,12 @@ import sys
 import communication
 import constants
 
-if sys.platform == "darwin":
-    import adaptive_mac as adaptive
-elif sys.platform == "win32":
+if sys.platform == "win32":
     import adaptive as adaptive
+else: # darwin and Linux
+    import adaptive_unix as adaptive
+
+
 
 def main():
     this_node = int(input("What's your node number:"))
