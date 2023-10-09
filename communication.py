@@ -66,7 +66,7 @@ def hash_string(s):
 
 def send_fault_status(sock, faulty):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
-    logging.info(f"Currently executing: {current_function_name}")
+    # logging.info(f"Currently executing: {current_function_name}")
     
     status = struct.pack('!I', hash_string(constants.NON_FAULTY_VAL))  # Convert to network byte order
 
@@ -77,7 +77,8 @@ def send_fault_status(sock, faulty):
     try:
         sock.sendall(status)
     except socket.error as e:
-        print("Error sending tested up:", e)
+        logging.error(f"{current_function_name} - Error sending tested up - {e}")
+        # print("Error sending tested up:", e)
 
 def receive_msg(sock):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name

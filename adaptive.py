@@ -121,6 +121,9 @@ def receive_thread(server_fd):
         receiving(server_fd)
 
 def receiving(server_fd):
+    current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
+    logging.info(f"Currently executing: {current_function_name}")
+
     address = ('', 0)  # Dummy initial value
     buffer_size = 2000
     current_sockets = [server_fd]
@@ -139,21 +142,18 @@ def receiving(server_fd):
                     current_sockets.append(client_socket)
                 else:
                     msg_type = communication.receive_msg(s)
-                    if msg_type == "TEST_MSG":
+                    if msg_type == constants.TEST_MSG:
+                        logging.info(f"{current_function_name} - Message Type - TEST_MSG")
                         communication.send_fault_status(s, FAULTY)
-                    elif msg_type == "REQUEST_MSG":
+                    elif msg_type == constants.REQUEST_MSG:
+                        logging.info(f"{current_function_name} - Message Type - REQUEST_MSG")
                         communication.send_array(s, tested_up, constants.NUM_NODES)
+                current_sockets.remove(s)
+                s.close()
             if k == (len(current_sockets) * 2):
                 break
     except socket.error as e:
         logging.info(f"Socket error: {e}")
-    finally:
-        try:
-            logging.debug("Closing socket")
-            s.close()
-            current_sockets.remove(s)
-        except Exception as e:
-            logging.error(f"Error closing socket: {e}")
 
 def update_arr(connections, num_connections, node_num):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
