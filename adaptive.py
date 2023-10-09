@@ -127,6 +127,7 @@ def receiving(server_fd):
     address = ('', 0)  # Dummy initial value
     buffer_size = 2000
     current_sockets = [server_fd]
+    ready_sockets = None
     k = 0
 
     global tested_up
@@ -134,26 +135,41 @@ def receiving(server_fd):
     try:
         while True:
             k += 1
-            ready_sockets, _, _ = select.select(current_sockets, [], [])
-
+            try:
+                ready_sockets, _, _ = select.select(current_sockets, [], [])
+                logging.info(f"{current_function_name} - Ready sockets read successfully")
+            except Exception as e:
+                logging.error(f"{current_function_name} - Error reading the ready sockets: {e}")
+            
             for s in ready_sockets:
                 if s == server_fd:
-                    client_socket, client_address = s.accept()
-                    current_sockets.append(client_socket)
+                    try:
+                        client_socket, client_address = s.accept()
+                        current_sockets.append(client_socket)
+                        logging.info(f"{current_function_name} - Client socket and address details extracted sucessfully from a ready socket")
+                    except Exception as e:
+                        logging.error(f"{current_function_name} - Error extracting client details from ready socket - {e}")
                 else:
                     msg_type = communication.receive_msg(s)
                     if msg_type == constants.TEST_MSG:
-                        logging.info(f"{current_function_name} - Message Type - TEST_MSG")
-                        communication.send_fault_status(s, FAULTY)
+                        try:
+                            communication.send_fault_status(s, FAULTY)
+                            logging.info(f"{current_function_name} - Message Type - TEST_MSG - sent fault status successfully")
+                        except Exception as e:
+                            logging.error(f"{current_function_name} - Message Type - TEST_MSG - Error sending message - {e}")
                     elif msg_type == constants.REQUEST_MSG:
-                        logging.info(f"{current_function_name} - Message Type - REQUEST_MSG")
-                        communication.send_array(s, tested_up, constants.NUM_NODES)
+                        
+                        try:
+                            communication.send_array(s, tested_up, constants.NUM_NODES)
+                            logging.info(f"{current_function_name} - Message Type - REQUEST_MSG - sent array successfully")
+                        except Exception as e:
+                            logging.error(f"{current_function_name} - Message Type - REQUEST_MSG - Error sending array - {e}")
                 current_sockets.remove(s)
                 s.close()
             if k == (len(current_sockets) * 2):
                 break
     except socket.error as e:
-        logging.info(f"Socket error: {e}")
+        logging.error(f"Socket error: {e}")
 
 def update_arr(connections, num_connections, node_num):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
