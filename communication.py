@@ -83,9 +83,11 @@ def send_fault_status(sock, faulty):
 def receive_msg(sock):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
     logging.info(f"Currently executing: {current_function_name}")
-    msg_type_data = sock.recv(4)  # Assuming 4 bytes for an integer, as it is in C
-    if len(msg_type_data) != 4:
-        raise ConnectionError("Failed to receive all 4 bytes for the message type")
+    # msg_type_data = sock.recv(4)  # Assuming 4 bytes for an integer, as it is in C
+    # if len(msg_type_data) != 4:
+    #     raise ConnectionError("Failed to receive all 4 bytes for the message type")
+    msg_type_data = sock.recv(1024)  # Assuming 4 bytes for an integer, as it is in C
+    logging.info(f"{current_function_name} - Message type: {msg_type_data}")
     msg_type = struct.unpack('!I', msg_type_data)[0]  # Unpacking the received data
     return msg_type
 
