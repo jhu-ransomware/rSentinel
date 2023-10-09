@@ -27,7 +27,7 @@ def send_msg_to_demo_node(node_num, arr):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
     logging.info(f"Currently executing: {current_function_name}")
 
-    sock = init_demo_socket()  # Assumes you have defined this function earlier
+    sock = init_demo_socket()
     if sock is None:
         print("Issue creating a socket")
         return
@@ -66,7 +66,7 @@ def hash_string(s):
 
 def send_fault_status(sock, faulty):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
-    # logging.info(f"Currently executing: {current_function_name}")
+    logging.info(f"Currently executing: {current_function_name}")
     
     status = struct.pack('!I', hash_string(constants.NON_FAULTY_VAL))  # Convert to network byte order
 
