@@ -164,8 +164,8 @@ def receiving(server_fd):
                             logging.info(f"{current_function_name} - Message Type - REQUEST_MSG - sent array successfully")
                         except Exception as e:
                             logging.error(f"{current_function_name} - Message Type - REQUEST_MSG - Error sending array - {e}")
-                current_sockets.remove(s)
-                s.close()
+                    current_sockets.remove(s)
+                    s.close()
             if k == (len(current_sockets) * 2):
                 break
     except socket.error as e:
