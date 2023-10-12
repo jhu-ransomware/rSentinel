@@ -62,7 +62,7 @@ def send_array(sock, arr):
 def hash_string(s):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
     logging.info(f"Currently executing: {current_function_name}")
-    return int(hashlib.md5(s.encode()).hexdigest(), 16)
+    return int(hashlib.md5(s.encode()).hexdigest(), 16) % 4294967296
 
 def send_fault_status(sock, faulty):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name

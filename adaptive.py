@@ -158,7 +158,6 @@ def receiving(server_fd):
                         except Exception as e:
                             logging.error(f"{current_function_name} - Message Type - TEST_MSG - Error sending message - {e}")
                     elif msg_type == constants.REQUEST_MSG:
-                        
                         try:
                             communication.send_array(s, tested_up, constants.NUM_NODES)
                             logging.info(f"{current_function_name} - Message Type - REQUEST_MSG - sent array successfully")
