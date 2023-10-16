@@ -68,11 +68,11 @@ def send_fault_status(sock, faulty):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
     logging.info(f"Currently executing: {current_function_name}")
     
-    status = struct.pack('!I', hash(constants.NON_FAULTY_VAL))  # Convert to network byte order
+    status = struct.pack('!I', hash(constants.NON_FAULTY_VAL, len(constants.NON_FAULTY_VAL)))  # Convert to network byte order
 
     if faulty:
         fault_val = "Lorem ipsum"
-        status = struct.pack('!I', hash(fault_val))
+        status = struct.pack('!I', hash(fault_val, len(constants.NON_FAULTY_VAL)))
 
     try:
         sock.sendall(status)
