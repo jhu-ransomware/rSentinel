@@ -132,6 +132,7 @@ def request_fault_status(sock):
     logging.info(f"Currently executing: {current_function_name}")
 
     status_data = None
+    status = None
 
     try:
         test_msg_data = struct.pack('!I', constants.TEST_MSG)  # Pack the TEST_MSG as a 4-byte integer
