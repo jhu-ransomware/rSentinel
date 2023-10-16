@@ -131,7 +131,7 @@ def request_fault_status(sock):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
     logging.info(f"Currently executing: {current_function_name}")
 
-    status = None
+    status_data = None
 
     try:
         test_msg_data = struct.pack('!I', constants.TEST_MSG)  # Pack the TEST_MSG as a 4-byte integer
@@ -152,6 +152,6 @@ def request_fault_status(sock):
     except Exception as e:
         logging.error(f"Socket error: {e}")
 
-    if status == hash(constants.NON_FAULTY_VAL, len(constants.NON_FAULTY_VAL)):
+    if status_data == hash(constants.NON_FAULTY_VAL, len(constants.NON_FAULTY_VAL)):
         return 0
     return 1
