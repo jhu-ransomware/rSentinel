@@ -141,9 +141,10 @@ def request_fault_status(sock):
         status_data = sock.recv(4)  # Assuming 4 bytes for an integer, as it is in C
         logging.info(f"Length of the status data: {len(status_data)}")
 
+        status = struct.unpack('!I', status_data)[0]  # Unpacking the received data
+        logging.info(f"Status data: {status}")
+
         if len(status_data) != 4:
-            status = struct.unpack('!I', status_data)[0]  # Unpacking the received data
-            logging.info(f"Status data: {status}")
             raise ConnectionError("Failed to receive all 4 bytes for the status")
     except ConnectionError as e:
         logging.error(f"Failed to receive all 4 bytes for the status")
@@ -152,6 +153,6 @@ def request_fault_status(sock):
     except Exception as e:
         logging.error(f"Socket error: {e}")
 
-    if status_data == hash(constants.NON_FAULTY_VAL, len(constants.NON_FAULTY_VAL)):
+    if status == hash(constants.NON_FAULTY_VAL, len(constants.NON_FAULTY_VAL)):
         return 0
     return 1
