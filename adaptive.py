@@ -146,7 +146,7 @@ def receiving(server_fd):
                     try:
                         client_socket, client_address = s.accept()
                         current_sockets.append(client_socket)
-                        logging.info(f"{current_function_name} - Client socket and address details extracted sucessfully from a ready socket")
+                        logging.info(f"{current_function_name} - Client socket and address {client_address} details extracted sucessfully from a ready socket")
                     except Exception as e:
                         logging.error(f"{current_function_name} - Error extracting client details from ready socket - {e}")
                 else:
