@@ -14,14 +14,13 @@ def request_arr(sock):
     req_msg_data = struct.pack('!I', constants.REQUEST_MSG)
     sock.send(req_msg_data)
 
-    buffer_data = sock.recv(constants.NUM_NODES * 4)  # Assuming 4 bytes for an integer, as in C
+    buffer_data = sock.recv(constants.NUM_NODES * 4)
 
     arr = []
-    for i in range(constants.NUM_NODES):
-        val = struct.unpack('!I', buffer_data[i*4:i*4+4])[0]
-        arr.append(val)
+    arr = list(struct.unpack('!' + 'I'*constants.NUM_NODES, buffer_data))
 
     return arr
+
 
 def send_msg_to_demo_node(node_num, arr):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
@@ -59,10 +58,12 @@ def send_array(sock, arr):
     except socket.error as e:
         print("Error sending tested up:", e)
 
+
 def hash_string(s):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
     logging.info(f"Currently executing: {current_function_name}")
     return int(hashlib.md5(s.encode()).hexdigest(), 16) % 4294967296
+
 
 def send_fault_status(sock, faulty):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
@@ -80,6 +81,7 @@ def send_fault_status(sock, faulty):
         logging.error(f"{current_function_name} - Error sending tested up - {e}")
         # print("Error sending tested up:", e)
 
+
 def receive_msg(sock):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
     logging.info(f"Currently executing: {current_function_name}")
@@ -90,6 +92,7 @@ def receive_msg(sock):
     logging.info(f"{current_function_name} - Message type: {msg_type_data}")
     msg_type = struct.unpack('!I', msg_type_data)[0]  # Unpacking the received data
     return msg_type
+
 
 def init_client_to_server(ip_address):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
@@ -103,6 +106,7 @@ def init_client_to_server(ip_address):
     except socket.error as err:
         print("Socket creation/connection error:", err)
         return None
+
 
 def hash(val, length):  # You will need to define a hash function in Python or use an existing one like hashlib
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
