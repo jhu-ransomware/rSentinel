@@ -107,7 +107,7 @@ def adaptive_dsd(faulty, connections, num_connections, node_num, lookup):
             update_arr(connections, num_connections, node_num)
             if DEMO:
                 diagnosis = diagnose.diagnose(tested_up, node_num)
-                communication.send_msg_to_demo_node(constants.DEMO_IP, node_num, diagnosis, constants.NUM_NODES)
+                
 
             # update lookup table
             if not FAULTY and monitor.run_detection(lookup):
@@ -181,7 +181,6 @@ def update_arr(connections, num_connections, node_num):
             sock = communication.init_client_to_server(connections[i]['ip_addr'])
             if sock is None:
                 logging.info(f"Issue creating socket to IP: {connections[i]['ip_addr']}")
-                # print("Issue creating a socket")
                 continue
             
             logging.info(f"Socket creation successful to IP: {connections[i]['ip_addr']}")
