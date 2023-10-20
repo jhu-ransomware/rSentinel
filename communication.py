@@ -14,7 +14,8 @@ def request_arr(sock):
     req_msg_data = struct.pack('!I', constants.REQUEST_MSG)
     sock.send(req_msg_data)
 
-    buffer_data = sock.recv(constants.NUM_NODES * 4)
+    # buffer_data = sock.recv(constants.NUM_NODES * 4)
+    buffer_data = sock.recv(1024)
 
     arr = []
     arr = list(struct.unpack('!' + 'I'*constants.NUM_NODES, buffer_data))
