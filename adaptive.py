@@ -85,7 +85,11 @@ def adaptive_dsd(faulty, connections, num_connections, node_num, lookup):
 
         # Check for user input using select
         if msvcrt.kbhit():
-            input_value = int(input())
+            try:
+                input_value = int(input())
+            except Exception as e:
+                logging.error(f"Input value is incorrect - {e}")
+                continue
             
             # Commenting out below for now to not allow manual update of fault
             # if input_value in [0, 1]:
