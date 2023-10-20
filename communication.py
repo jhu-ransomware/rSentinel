@@ -17,8 +17,11 @@ def request_arr(sock):
     # buffer_data = sock.recv(constants.NUM_NODES * 4)
     buffer_data = sock.recv(1024)
 
-    arr = []
-    arr = list(struct.unpack('!' + 'I'*constants.NUM_NODES, buffer_data))
+    arr = [0] * constants.NUM_NODES
+    try:
+        arr = list(struct.unpack('!' + 'I'*constants.NUM_NODES, buffer_data))
+    except Exception as e:
+        logging.error(f"{current_function_name} - Error unpacking received socket data - {e}")
 
     return arr
 

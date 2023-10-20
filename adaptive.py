@@ -191,7 +191,6 @@ def update_arr(connections, num_connections, node_num):
             # Ask for fault status
             fault_status = communication.request_fault_status(sock)
             if (not FAULTY and not fault_status) or (FAULTY and fault_status):  # TODO: Add more logic here
-                new_arr = [0] * constants.NUM_NODES
                 new_arr = communication.request_arr(sock)
                 fault_status = communication.request_fault_status(sock)  # Check fault status again before updating array
                 
