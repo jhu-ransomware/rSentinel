@@ -186,11 +186,11 @@ def update_arr(connections, num_connections, node_num):
             if sock is None:
                 logging.info(f"Issue creating socket to IP: {connections[i]['ip_addr']}")
                 continue
-            sock.close()
             
             logging.info(f"Socket creation successful to IP: {connections[i]['ip_addr']}")
             # Ask for fault status
             fault_status = communication.request_fault_status(sock)
+            sock.close()
             if (not FAULTY and not fault_status) or (FAULTY and fault_status):  # TODO: Add more logic here
                 sock = communication.init_client_to_server(connections[i]['ip_addr'])
                 if sock is None:
@@ -209,8 +209,6 @@ def update_arr(connections, num_connections, node_num):
                     update_tested_up(new_arr, node_num, connections[i]['node_num'])
                     found_non_faulty = True
                     break
-
-            sock.close()
 
         except socket.error as e:
             print(f"Socket error: {e}")
