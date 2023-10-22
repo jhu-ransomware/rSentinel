@@ -103,9 +103,9 @@ def adaptive_dsd(faulty, connections, num_connections, node_num, lookup):
                 print("Diagnosis:")
                 for i in range(constants.NUM_NODES):
                     if diagnosis[i] == 1:
-                        print(f"Node {i} is faulty")
+                        logging.debug(f"{current_function_name} - Node {i} is faulty")
                     else:
-                        print(f"Node {i} is not faulty")
+                        logging.debug(f"{current_function_name} - Node {i} is not faulty")
             else:
                 print("Invalid input. Enter 1 or 0 to change fault status, or 2 to diagnose.")
                 
