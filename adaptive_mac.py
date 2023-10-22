@@ -30,7 +30,7 @@ def kbhit():
 
 def start_algo(faulty, connections, num_connections, node_num):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
-    logging.info(f"Currently executing: {current_function_name}")
+    logging.debug(f"Currently executing: {current_function_name}")
 
     global FAULTY
     global tested_up
@@ -56,7 +56,7 @@ def start_algo(faulty, connections, num_connections, node_num):
     files = [f for f in files if f not in ['.', '..']]
     file_count = len(files)
 
-    logging.info(f"File count in 'test' directory: {file_count}")
+    logging.debug(f"File count in 'test' directory: {file_count}")
     
 
     file_lookup = []
@@ -77,7 +77,7 @@ def start_algo(faulty, connections, num_connections, node_num):
 
 def adaptive_dsd(faulty, connections, num_connections, node_num, lookup):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
-    logging.info(f"Currently executing: {current_function_name}")
+    logging.debug(f"Currently executing: {current_function_name}")
 
     global FAULTY
     global tested_up
@@ -158,7 +158,7 @@ def receiving(server_fd):
             if k == (len(current_sockets) * 2):
                 break
     except socket.error as e:
-        logging.info(f"Socket error: {e}")
+        logging.debug(f"Socket error: {e}")
     finally:
         try:
             logging.debug("Closing socket")
@@ -169,7 +169,7 @@ def receiving(server_fd):
 
 def update_arr(connections, num_connections, node_num):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
-    logging.info(f"Currently executing: {current_function_name}")
+    logging.debug(f"Currently executing: {current_function_name}")
 
     global tested_up
 
@@ -178,11 +178,11 @@ def update_arr(connections, num_connections, node_num):
         try:
             sock = communication.init_client_to_server(connections[i]['ip_addr'])
             if sock is None:
-                logging.info(f"Issue creating socket to IP: {connections[i]['ip_addr']}")
+                logging.debug(f"Issue creating socket to IP: {connections[i]['ip_addr']}")
                 # print("Issue creating a socket")
                 continue
             
-            logging.info(f"Socket creation successful to IP: {connections[i]['ip_addr']}")
+            logging.debug(f"Socket creation successful to IP: {connections[i]['ip_addr']}")
             # Ask for fault status
             fault_status = communication.request_fault_status(sock)
             if (not FAULTY and not fault_status) or (FAULTY and fault_status):  # TODO: Add more logic here
@@ -207,7 +207,7 @@ def update_arr(connections, num_connections, node_num):
 
 def update_tested_up(new_arr, node, tested_node):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
-    logging.info(f"Currently executing: {current_function_name}")
+    logging.debug(f"Currently executing: {current_function_name}")
 
     global tested_up
 

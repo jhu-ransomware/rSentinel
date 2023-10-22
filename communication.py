@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 def request_arr(sock):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
-    logging.info(f"Currently executing: {current_function_name}")
+    logging.debug(f"Currently executing: {current_function_name}")
 
     req_msg_data = struct.pack('!I', constants.REQUEST_MSG)
     sock.send(req_msg_data)
@@ -30,7 +30,7 @@ def request_arr(sock):
 
 def send_msg_to_demo_node(node_num, arr):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
-    logging.info(f"Currently executing: {current_function_name}")
+    logging.debug(f"Currently executing: {current_function_name}")
 
     sock = init_demo_socket()
     if sock is None:
@@ -55,7 +55,7 @@ def send_msg_to_demo_node(node_num, arr):
 def send_array(sock, arr):
 
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
-    logging.info(f"Currently executing: {current_function_name}")
+    logging.debug(f"Currently executing: {current_function_name}")
 
     buffer = [struct.pack('!I', val) for val in arr]  # Convert integers to network byte order
     buffer_bytes = b''.join(buffer)  # Join the byte arrays to create a single byte string
@@ -67,13 +67,13 @@ def send_array(sock, arr):
 
 def hash_string(s):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
-    logging.info(f"Currently executing: {current_function_name}")
+    logging.debug(f"Currently executing: {current_function_name}")
     return int(hashlib.md5(s.encode()).hexdigest(), 16) % 4294967296
 
 
 def send_fault_status(sock, faulty):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
-    logging.info(f"Currently executing: {current_function_name}")
+    logging.debug(f"Currently executing: {current_function_name}")
     
     status = struct.pack('!I', hash(constants.NON_FAULTY_VAL, len(constants.NON_FAULTY_VAL)))  # Convert to network byte order
 
@@ -90,19 +90,19 @@ def send_fault_status(sock, faulty):
 
 def receive_msg(sock):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
-    logging.info(f"Currently executing: {current_function_name}")
+    logging.debug(f"Currently executing: {current_function_name}")
     msg_type_data = sock.recv(4)  # Assuming 4 bytes for an integer, as it is in C
     if len(msg_type_data) != 4:
         raise ConnectionError("Failed to receive all 4 bytes for the message type")
     # msg_type_data = sock.recv(1024)  # Assuming 4 bytes for an integer, as it is in C
-    logging.info(f"{current_function_name} - Message type: {msg_type_data}")
+    logging.debug(f"{current_function_name} - Message type: {msg_type_data}")
     msg_type = struct.unpack('!I', msg_type_data)[0]  # Unpacking the received data
     return msg_type
 
 
 def init_client_to_server(ip_address):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
-    logging.info(f"Currently executing: {current_function_name}")
+    logging.debug(f"Currently executing: {current_function_name}")
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.settimeout(constants.SOCKET_TIMEOUT_GLOBAL)
 
@@ -116,7 +116,7 @@ def init_client_to_server(ip_address):
 
 def hash(val, length):  # You will need to define a hash function in Python or use an existing one like hashlib
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
-    logging.info(f"Currently executing: {current_function_name}")
+    logging.debug(f"Currently executing: {current_function_name}")
     # Dummy hash function for the sake of conversion. 
     # Replace this with your actual hash function.
     return sum(ord(c) for c in val) 
@@ -125,7 +125,7 @@ def hash(val, length):  # You will need to define a hash function in Python or u
 def init_demo_socket():
 
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
-    logging.info(f"Currently executing: {current_function_name}")
+    logging.debug(f"Currently executing: {current_function_name}")
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -139,7 +139,7 @@ def init_demo_socket():
 def request_fault_status(sock):
 
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
-    logging.info(f"Currently executing: {current_function_name}")
+    logging.debug(f"Currently executing: {current_function_name}")
 
     status_data = None
     status = None
@@ -147,13 +147,13 @@ def request_fault_status(sock):
     try:
         test_msg_data = struct.pack('!I', constants.TEST_MSG)  # Pack the TEST_MSG as a 4-byte integer
         sock.send(test_msg_data)
-        logging.info(f"Test message sent successfully")
+        logging.debug(f"Test message sent successfully")
 
         status_data = sock.recv(4)  # Assuming 4 bytes for an integer, as it is in C
-        logging.info(f"Length of the status data: {len(status_data)}")
+        logging.debug(f"Length of the status data: {len(status_data)}")
 
         status = struct.unpack('!I', status_data)[0]  # Unpacking the received data
-        logging.info(f"Status data: {status}")
+        logging.debug(f"Status data: {status}")
     except ConnectionError as e:
         logging.error(f"Failed to receive all 4 bytes for the status")
     except socket.timeout as e:

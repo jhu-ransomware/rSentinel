@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 def run_detection(entropies):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
-    logging.info(f"Currently executing: {current_function_name}")
+    logging.debug(f"Currently executing: {current_function_name}")
 
     encrp_files = update_entropy(entropies)
     if encrp_files / len(entropies) > constants.ENTROPHY_INCREASE_BATCH:
