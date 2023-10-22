@@ -14,6 +14,8 @@ import monitor
 import logging
 import inspect
 
+logger = logging.getLogger(__name__)
+
 tested_up = None
 DEMO = 0
 FAULTY = None

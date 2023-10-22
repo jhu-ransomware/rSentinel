@@ -2,6 +2,8 @@ import constants
 import inspect
 import logging
 
+logger = logging.getLogger(__name__)
+
 def diagnose(tested_up, index):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
     logging.info(f"Currently executing: {current_function_name}")

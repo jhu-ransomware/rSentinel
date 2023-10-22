@@ -15,6 +15,8 @@ import logging
 import inspect
 import msvcrt
 
+logger = logging.getLogger(__name__)
+
 tested_up = None
 DEMO = 0
 FAULTY = None

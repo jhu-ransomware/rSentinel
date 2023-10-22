@@ -2,7 +2,7 @@ from math import log2
 import logging
 import inspect
 
-logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def makehist(fh, flen):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
