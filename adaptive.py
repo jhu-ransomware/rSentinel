@@ -199,6 +199,7 @@ def update_arr(connections, num_connections, node_num):
                 new_arr = communication.request_arr(sock)
                 sock.close()
 
+                sock = communication.init_client_to_server(connections[i]['ip_addr'])
                 if sock is None:
                     logging.info(f"Issue creating socket to IP: {connections[i]['ip_addr']}")
                     continue
