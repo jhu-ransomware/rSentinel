@@ -2,6 +2,9 @@ import diagnose
 import sys
 import communication
 import constants
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
 
 if sys.platform == "win32":
     import adaptive as adaptive
@@ -11,6 +14,9 @@ else: # darwin and Linux
 
 
 def main():
+    logger = logging.getLogger(__name__)
+    logging.debug("Starting the application")
+
     this_node = int(input("What's your node number:"))
     faulty = int(input("Enter your fault status:"))
 
