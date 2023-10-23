@@ -22,6 +22,7 @@ def request_arr(sock):
     arr = [0] * constants.NUM_NODES
     try:
         arr = list(struct.unpack('!' + 'I'*constants.NUM_NODES, buffer_data))
+        logging.debug(f"{current_function_name} - Received array - {arr}")
     except Exception as e:
         logging.error(f"{current_function_name} - Error unpacking received socket data - {e}")
 
