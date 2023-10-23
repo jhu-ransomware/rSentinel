@@ -36,7 +36,7 @@ def start_algo(faulty, connections, num_connections, node_num):
 
     # Creating socket
     server_fd.bind(('0.0.0.0', constants.PORT))
-    server_fd.listen(5)
+    server_fd.listen(10)
 
     DEMO = int(input("Please enter if you wish to send results to a demo (1 for yes, 0 for no):\n"))
 
@@ -62,10 +62,12 @@ def start_algo(faulty, connections, num_connections, node_num):
     ready = 0
     while not ready:
         ready = int(input("Enter 1 to begin testing other nodes:\n"))
+    
+    threading.Thread(target=adaptive_dsd, args=(faulty, connections, num_connections, node_num, file_lookup)).start()
 
-    adaptive_dsd(faulty, connections, num_connections, node_num, file_lookup)
+    # adaptive_dsd(faulty, connections, num_connections, node_num, file_lookup)
 
-    server_fd.close()
+    # server_fd.close()
 
 
 def adaptive_dsd(faulty, connections, num_connections, node_num, lookup):
@@ -128,9 +130,16 @@ def adaptive_dsd(faulty, connections, num_connections, node_num, lookup):
             start = time.time()
 
 def receive_thread(server_fd):
-    while True:
-        time.sleep(2)
-        receiving(server_fd)
+    current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
+    logging.debug(f"Currently executing: {current_function_name}")
+    try:
+        while True:
+            time.sleep(2)
+            receiving(server_fd)
+    except Exception as e:
+        logging.error(f"{current_function_name} - Error - {e}")
+    finally:
+        server_fd.close()
 
 def receiving(server_fd):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
