@@ -13,7 +13,7 @@ def request_arr(sock):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
     logging.debug(f"Currently executing: {current_function_name}")
 
-    req_msg_data = struct.pack('!I', constants.REQUEST_MSG)
+    req_msg_data = struct.pack('!i', constants.REQUEST_MSG)
     sock.send(req_msg_data)
 
     # buffer_data = sock.recv(constants.NUM_NODES * 4)
@@ -58,7 +58,7 @@ def send_array(sock, arr):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
     logging.debug(f"Currently executing: {current_function_name}")
 
-    buffer = [struct.pack('!I', val) for val in arr]  # Convert integers to network byte order
+    buffer = [struct.pack('!i', val) for val in arr]  # Convert integers to network byte order
     buffer_bytes = b''.join(buffer)  # Join the byte arrays to create a single byte string
     try:
         sock.sendall(buffer_bytes)
