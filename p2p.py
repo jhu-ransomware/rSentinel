@@ -4,7 +4,7 @@ import communication
 import constants
 import logging
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 if sys.platform == "darwin":
     import adaptive_mac as adaptive
