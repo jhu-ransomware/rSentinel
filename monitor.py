@@ -10,16 +10,13 @@ def run_detection(entropies):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
     logging.debug(f"Currently executing: {current_function_name}")
 
-    cnt = 0 # counter for check fail
+    cnt = 0 # counter for check fail: entropy increasing or canary modification
 
     logging.debug(f"Currently executing: entropy check.")
     encrp_files = update_entropy(entropies)
     if encrp_files / len(entropies) > constants.ENTROPHY_INCREASE_BATCH:
-        #return 1 
-        cnt += 0       
-    #else:
-        #return 0
-    
+        cnt += 1
+
     logging.debug(f"Currently executing: canary file check.")
     ori_digest = canary.createCanary()
     if canary.chkCanaryChange(canary.canary_file, ori_digest):
