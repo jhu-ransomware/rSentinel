@@ -121,6 +121,8 @@ def adaptive_dsd(faulty, connections, num_connections, node_num, lookup):
             if not FAULTY and monitor.run_detection(lookup):
                 FAULTY = 1
             
+            #tested_up = [0,2,0]
+            #node_num = 1
             diagnosis = diagnose.diagnose(tested_up, node_num)
             for i in range(constants.NUM_NODES):
                 if diagnosis[i] == 1:
@@ -247,20 +249,12 @@ def update_tested_up(new_arr, node, tested_node):
 
     global tested_up
 
+    logging.debug(f"{current_function_name} - Before updation of tested_up - {tested_up}")
+
     tested_up[node] = tested_node
-    
-    for i in range(constants.NUM_NODES):
-        if i < constants.NUM_NODES - 1:
-            print(tested_up[i], end=' ')
-        else:
-            print(tested_up[i])
 
     for i in range(constants.NUM_NODES):
         if i != node:
             tested_up[i] = new_arr[i]
 
-    for i in range(constants.NUM_NODES):
-        if i < constants.NUM_NODES - 1:
-            print(tested_up[i], end=' ')
-        else:
-            print(tested_up[i])
+    logging.debug(f"{current_function_name} - After updation of tested_up - {tested_up}")
