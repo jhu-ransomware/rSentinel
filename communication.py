@@ -13,7 +13,7 @@ def request_arr(sock):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
     logging.debug(f"Currently executing: {current_function_name}")
 
-    req_msg_data = struct.pack('!i', constants.REQUEST_MSG)
+    req_msg_data = struct.pack('!I', constants.REQUEST_MSG)
     sock.send(req_msg_data)
 
     # buffer_data = sock.recv(constants.NUM_NODES * 4)
@@ -21,7 +21,7 @@ def request_arr(sock):
 
     arr = [0] * constants.NUM_NODES
     try:
-        arr = list(struct.unpack('!' + 'I'*constants.NUM_NODES, buffer_data))
+        arr = list(struct.unpack('!' + 'i'*constants.NUM_NODES, buffer_data))
         logging.debug(f"{current_function_name} - Received array - {arr}")
     except Exception as e:
         logging.error(f"{current_function_name} - Error unpacking received socket data - {e}")
