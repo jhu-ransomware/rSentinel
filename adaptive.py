@@ -112,6 +112,7 @@ def adaptive_dsd(faulty, connections, num_connections, node_num, lookup):
                 
         if curr_time > constants.TESTING_INTERVAL:
             logging.debug(f"{current_function_name} - Starting the testing now after {constants.TESTING_INTERVAL} seconds")
+            logging.info(f"{current_function_name} - Tested up array at testing interval - {tested_up}")
             update_arr(connections, num_connections, node_num)
             if DEMO:
                 diagnosis = diagnose.diagnose(tested_up, node_num)
