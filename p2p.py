@@ -6,10 +6,12 @@ import logging
 
 logging.basicConfig(level=logging.INFO)
 
-if sys.platform == "darwin":
-    import adaptive_mac as adaptive
-elif sys.platform == "win32":
+if sys.platform == "win32":
     import adaptive as adaptive
+else: # darwin and Linux
+    import adaptive_unix as adaptive
+
+
 
 def main():
     logger = logging.getLogger(__name__)
