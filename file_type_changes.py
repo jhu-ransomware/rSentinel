@@ -32,7 +32,7 @@ def check_magic_numbers():
         current_magic_number = get_magic_number(file).hex()
         if file in tracked_magic_numbers:
             if tracked_magic_numbers[file] != current_magic_number:
-                logging.debug(f"WARNING: Magic number for {file} has changed!")
+                logging.info(f"WARNING: Magic number for {file} has changed to {current_magic_number}")
                 changed_files_count += 1
             else:
                 logging.debug(f"Magic number for {file} remains the same.")
