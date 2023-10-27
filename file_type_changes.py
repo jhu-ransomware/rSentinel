@@ -22,7 +22,7 @@ def check_magic_numbers():
     if not tracked_magic_numbers:
         logging.debug("Saving magic numbers for the first time")
         save_magic_numbers(files_to_track)
-        logging.info("Magic numbers saved successfully for the first time - {tracked_magic_numbers}")
+        logging.info(f"Magic numbers saved successfully for the first time - {tracked_magic_numbers}")
         return False  # No changes detected on the first run
 
     changed_files_count = 0
