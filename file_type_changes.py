@@ -15,12 +15,14 @@ def save_magic_numbers(files):
         tracked_magic_numbers[file] = magic_number.hex()
 
 def check_magic_numbers():
+    global tracked_magic_numbers
+
     files_to_track = [os.path.join(constants.TEST_DIR, file) for file in os.listdir(constants.TEST_DIR) if os.path.isfile(os.path.join(constants.TEST_DIR, file))]
     
     if not tracked_magic_numbers:
         logging.debug("Saving magic numbers for the first time")
         save_magic_numbers(files_to_track)
-        logging.debug("Magic numbers saved successfully for the first time")
+        logging.info("Magic numbers saved successfully for the first time - {tracked_magic_numbers}")
         return False  # No changes detected on the first run
 
     changed_files_count = 0
