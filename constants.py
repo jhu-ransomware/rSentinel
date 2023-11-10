@@ -15,6 +15,8 @@ SOCKET_TIMEOUT_GLOBAL = 250
 
 NON_FAULTY_VAL = "WE_ARE_GOOD"
 
+TEST_DIR = "./test/"
+
 # Structures
 
 class Connection:
