@@ -47,7 +47,7 @@ func checkFilesInDirectory(directory string) int {
 			baseName := baseNameRegex.ReplaceAllString(d.Name(), "$1")
 
 			// Log the base name and extension for debugging
-			//log.Printf("File: %s, Base Name: %s\n", d.Name(), baseName)
+			log.Printf("File: %s, Base Name: %s\n", d.Name(), baseName)
 
 			// Add the file to the similarFiles map
 			similarFiles[baseName] = append(similarFiles[baseName], path)
@@ -61,7 +61,7 @@ func checkFilesInDirectory(directory string) int {
 
 			// Skip files smaller than 20 KB or larger than 200 MB
 			if fileInfo.Size() < 20*1024 || fileInfo.Size() > 200*1024*1024 {
-				// log.Printf("Skipping file %s due to size restrictions (size: %d bytes)\n", path, fileInfo.Size())
+				log.Printf("Skipping file %s due to size restrictions (size: %d bytes)\n", path, fileInfo.Size())
 				return nil
 			}
 		}
@@ -80,11 +80,11 @@ func checkFilesInDirectory(directory string) int {
 	for _, files := range similarFiles {
 		if len(files) < 2 {
 			// Skip groups with only one file
-			// log.Println("Skipping group with less than two files.")
+			log.Println("Skipping group with less than two files.")
 			continue
 		}
 
-		// log.Println("Starting similarity checks...")
+		log.Println("Starting similarity checks...")
 
 		for i, pathA := range files {
 			for j := i + 1; j < len(files); j++ {
@@ -96,7 +96,7 @@ func checkFilesInDirectory(directory string) int {
 					processedPairs[pairKey] = true
 
 					// Log the files being checked
-					// log.Printf("Checking similarity between %s and %s\n", pathA, files[j])
+					log.Printf("Checking similarity between %s and %s\n", pathA, files[j])
 
 					// Compare a and b file names
 					similarity, errSimilarity := calculateSimilarity(pathA, files[j])
@@ -110,7 +110,7 @@ func checkFilesInDirectory(directory string) int {
 					totalFileCount++ // Increment totalFileCount for every pair of files compared
 
 					if similarity >= 0 && similarity <= 2 {
-						// log.Printf("Dissimilarity between %s and %s: %d\n", pathA, files[j], similarity)
+						log.Printf("Dissimilarity between %s and %s: %d\n", pathA, files[j], similarity)
 						dissimilarCount++
 					}
 				}
@@ -119,7 +119,7 @@ func checkFilesInDirectory(directory string) int {
 	}
 
 	dissimilarityThreshold := 0.4
-	// log.Printf("Dissimilar Count: %d, Total File Count: %d\n", dissimilarCount, totalFileCount)
+	log.Printf("Dissimilar Count: %d, Total File Count: %d\n", dissimilarCount, totalFileCount)
 	if float64(dissimilarCount)/float64(totalFileCount) >= dissimilarityThreshold {
 		return 1
 	}

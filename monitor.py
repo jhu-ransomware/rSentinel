@@ -28,8 +28,12 @@ def run_detection(entropies):
     if ftc.check_magic_numbers():
         cnt += 1
     logging.debug(f"Currently executing: Fuzzy Hashing")
-    if fuzzysd.result:
+    result_fuzzy = fuzzysd.run_go_script("/c/cygwin/cgdrive/Users/")
+    if not isinstance(result_fuzzy, int) or result_fuzzy not in [0, 1]:
+        raise ValueError(f"Invalid result: {result_fuzzy}. Expected 0 or 1.")
+    if result_fuzzy:
         cnt += 1
+    
 
     if cnt > 0:
         return 1
