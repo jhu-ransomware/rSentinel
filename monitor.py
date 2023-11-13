@@ -3,6 +3,7 @@ import entropy
 import inspect
 import logging
 import canary
+import fuzzysd
 import file_type_changes as ftc
 
 logger = logging.getLogger(__name__)
@@ -26,11 +27,16 @@ def run_detection(entropies):
     logging.debug(f"Currently executing: File Type Changes")
     if ftc.check_magic_numbers():
         cnt += 1
+    logging.debug(f"Currently executing: Fuzzy Hashing")
+    if fuzzysd.result:
+        cnt += 1
 
     if cnt > 0:
         return 1
     else:
         return 0
+    
+    
 
 def update_entropy(entropies):
     encrp_files = 0
