@@ -207,7 +207,6 @@ def update_arr(connections, num_connections, node_num):
 
     global tested_up
     global CODE_INTEGRITY_CHECK_FLAG
-    global FAULTY
 
     found_non_faulty = False
     for i in range(num_connections):
@@ -235,15 +234,13 @@ def update_arr(connections, num_connections, node_num):
                 CODE_INTEGRITY_CHECK_FLAG = True
                 sock.close()
 
-            if CODE_INTEGRITY_CHECK_FLAG and code_integrity_status:
-                FAULTY = 1
-
             if (not FAULTY and not fault_status) or (FAULTY and fault_status):  # TODO: Add more logic here
                 sock = communication.init_client_to_server(connections[i]['ip_addr'])
                 if sock is None:
                     logging.debug(f"Issue creating socket to IP: {connections[i]['ip_addr']}")
                     continue
                 new_arr = communication.request_arr(sock)
+                logging.debug(f"{current_function_name} - New array value received from {connections[i]['ip_addr']}  - {new_arr}")
                 sock.close()
 
                 sock = communication.init_client_to_server(connections[i]['ip_addr'])
