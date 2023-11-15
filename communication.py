@@ -6,6 +6,7 @@ import struct
 import constants
 import inspect
 import logging
+import code_integrity_check
 
 logger = logging.getLogger(__name__)
 
@@ -165,3 +166,38 @@ def request_fault_status(sock):
     if status == hash(constants.NON_FAULTY_VAL, len(constants.NON_FAULTY_VAL)):
         return 0
     return 1
+
+def request_code_integrity_signature(sock):
+    current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
+    logging.debug(f"Currently executing: {current_function_name}")
+    code_integrity_verified = False
+
+    try:
+        combined_hash = code_integrity_check.generate_combined_hash()
+        test_msg_data = struct.pack('!I', constants.CODE_INTEGRITY_MSG)  # Pack the TEST_MSG as a 4-byte integer
+        sock.send(test_msg_data)
+        logging.debug(f"Code integrity message request sent successfully")
+
+        signed_signature = sock.recv(1024)  # Assuming 4 bytes for an integer, as it is in C
+
+        code_integrity_verified = code_integrity_check.verify_signature(combined_hash, signed_signature)
+        
+    except socket.timeout as e:
+        logging.error(f"Socket connection timed out")
+    except Exception as e:
+        logging.error(f"Socket error: {e}")
+    finally:
+        return code_integrity_verified
+
+def send_code_integrity_signature(sock):
+    current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
+    logging.debug(f"Currently executing: {current_function_name}")
+    
+    try:
+        combined_hash = code_integrity_check.generate_combined_hash()
+        sock.sendall(combined_hash)
+        logging.debug(f"Code integrity message sent successfully")
+    except socket.timeout as e:
+        logging.error(f"Socket connection timed out")
+    except Exception as e:
+        logging.error(f"Socket error: {e}")
