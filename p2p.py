@@ -4,7 +4,7 @@ import communication
 import constants
 import logging
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
 if sys.platform == "win32":
     import adaptive as adaptive

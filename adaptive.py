@@ -14,12 +14,14 @@ import monitor
 import logging
 import inspect
 import msvcrt
+import code_integrity_check
 
 logger = logging.getLogger(__name__)
 
 tested_up = None
 DEMO = 0
 FAULTY = None
+CODE_INTEGRITY_CHECK_FLAG = False
 
 def start_algo(faulty, connections, num_connections, node_num):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
@@ -80,7 +82,7 @@ def adaptive_dsd(faulty, connections, num_connections, node_num, lookup):
 
     FAULTY = faulty
 
-    print("\n*****At any point in time enter a new fault status (1 or 0) or 2 to diagnose:*****")
+    # print("\n*****At any point in time enter a new fault status (1 or 0) or 2 to diagnose:*****")
     start = time.time()
 
     while True:
@@ -188,6 +190,11 @@ def receiving(server_fd):
                             logging.debug(f"{current_function_name} - Message Type - REQUEST_MSG - sent array successfully")
                         except Exception as e:
                             logging.error(f"{current_function_name} - Message Type - REQUEST_MSG - Error sending array - {e}")
+                    elif msg_type == constants.CODE_INTEGRITY_MSG:
+                        try:
+                            communication.send_code_integrity_signature(s)
+                        except Exception as e:
+                            logging.error(f"{current_function_name} - Message Type - CODE_INTEGRITY_MSG - Error sending data - {e}")
                     current_sockets.remove(s)
             if k == (len(current_sockets) * 2):
                 break
@@ -199,25 +206,41 @@ def update_arr(connections, num_connections, node_num):
     logging.debug(f"Currently executing: {current_function_name}")
 
     global tested_up
+    global CODE_INTEGRITY_CHECK_FLAG
 
     found_non_faulty = False
     for i in range(num_connections):
         try:
+
+            # Ask for fault status
             sock = communication.init_client_to_server(connections[i]['ip_addr'])
             if sock is None:
                 logging.debug(f"Issue creating socket to IP: {connections[i]['ip_addr']}")
                 continue
             
             logging.debug(f"Socket creation successful to IP: {connections[i]['ip_addr']}")
-            # Ask for fault status
             fault_status = communication.request_fault_status(sock)
             sock.close()
+
+            # Ask for code integrity if not done
+            if not CODE_INTEGRITY_CHECK_FLAG:
+                sock = communication.init_client_to_server(connections[i]['ip_addr'])
+                if sock is None:
+                    logging.debug(f"Issue creating socket to IP: {connections[i]['ip_addr']}")
+                    continue
+            
+                logging.debug(f"Socket creation successful to IP: {connections[i]['ip_addr']}")
+                code_integrity_status = communication.request_code_integrity_signature(sock)
+                CODE_INTEGRITY_CHECK_FLAG = True
+                sock.close()
+
             if (not FAULTY and not fault_status) or (FAULTY and fault_status):  # TODO: Add more logic here
                 sock = communication.init_client_to_server(connections[i]['ip_addr'])
                 if sock is None:
                     logging.debug(f"Issue creating socket to IP: {connections[i]['ip_addr']}")
                     continue
                 new_arr = communication.request_arr(sock)
+                logging.debug(f"{current_function_name} - New array value received from {connections[i]['ip_addr']}  - {new_arr}")
                 sock.close()
 
                 sock = communication.init_client_to_server(connections[i]['ip_addr'])

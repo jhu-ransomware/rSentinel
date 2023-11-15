@@ -85,7 +85,8 @@ def adaptive_dsd(faulty, connections, num_connections, node_num, lookup):
 
     FAULTY = faulty
 
-    print("\n*****At any point in time enter a new fault status (1 or 0) or 2 to diagnose:*****")
+    # print("\n*****At any point in time enter a new fault status (1 or 0) or 2 to diagnose:*****")
+    
     start = time.time()
 
     while True:
