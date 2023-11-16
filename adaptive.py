@@ -205,6 +205,7 @@ def receiving(server_fd):
 def update_arr(connections, num_connections, node_num):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
     logger.debug(f"Currently executing: {current_function_name}")
+    code_integrity_status = False
 
     global tested_up
     global CODE_INTEGRITY_CHECK_FLAG

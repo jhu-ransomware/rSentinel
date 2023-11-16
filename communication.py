@@ -196,6 +196,7 @@ def send_code_integrity_signature(sock):
     
     try:
         combined_hash = code_integrity_check.generate_combined_hash()
+        signed_hash = code_integrity_check.sign_data(combined_hash)
         sock.sendall(combined_hash)
         logger.debug(f"Code integrity message sent successfully")
     except socket.timeout as e:
