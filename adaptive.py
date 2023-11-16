@@ -129,9 +129,9 @@ def adaptive_dsd(faulty, connections, num_connections, node_num, lookup):
             diagnosis = diagnose.diagnose(tested_up, node_num)
             for i in range(constants.NUM_NODES):
                 if diagnosis[i] == 1:
-                    logger.info(f"{current_function_name} - Node {i} is faulty")
+                    logger.error(f"{current_function_name} - Node {i} is faulty")
                 else:
-                    logger.info(f"{current_function_name} - Node {i} is not faulty")
+                    logger.debug(f"{current_function_name} - Node {i} is not faulty")
 
             start = time.time()
 
