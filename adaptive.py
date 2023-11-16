@@ -228,23 +228,19 @@ def update_arr(connections, num_connections, node_num):
                 logger.error(f"{current_function_name} - Failed to close socket which is not alive")
 
             # Ask for code integrity if not done
-            if not CODE_INTEGRITY_CHECK_FLAG:
-                logger.debug(f"{current_function_name} - Code integrity check not done, proceeding to check")
-                sock = communication.init_client_to_server(connections[i]['ip_addr'])
-                if sock is None:
-                    logger.debug(f"Issue creating socket to IP: {connections[i]['ip_addr']}")
-                    continue
-            
-                logger.debug(f"Socket creation successful to IP: {connections[i]['ip_addr']}")
-                code_integrity_status = communication.request_code_integrity_signature(sock)
-                CODE_INTEGRITY_CHECK_FLAG = True
-                try:
-                    sock.close()
-                except Exception as e:
-                    logger.error(f"{current_function_name} - Failed to close socket which is not alive")
-            else:
-                logger.debug(f"{current_function_name} - Code integrity check done, skipping")
-                code_integrity_status = True
+            logger.debug(f"{current_function_name} - Code integrity check not done, proceeding to check")
+            sock = communication.init_client_to_server(connections[i]['ip_addr'])
+            if sock is None:
+                logger.debug(f"Issue creating socket to IP: {connections[i]['ip_addr']}")
+                continue
+        
+            logger.debug(f"Socket creation successful to IP: {connections[i]['ip_addr']}")
+            code_integrity_status = communication.request_code_integrity_signature(sock)
+            CODE_INTEGRITY_CHECK_FLAG = True
+            try:
+                sock.close()
+            except Exception as e:
+                logger.error(f"{current_function_name} - Failed to close socket which is not alive")
 
             if (not FAULTY and not fault_status) or (FAULTY and fault_status):  # TODO: Add more logic here
                 sock = communication.init_client_to_server(connections[i]['ip_addr'])
