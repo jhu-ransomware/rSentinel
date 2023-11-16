@@ -5,10 +5,10 @@ import socket
 import struct
 import constants
 import inspect
-import logging
 import code_integrity_check
+from logconfig import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 def request_arr(sock):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name

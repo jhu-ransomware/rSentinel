@@ -11,12 +11,12 @@ import entropy
 import diagnose
 import communication
 import monitor
-import logging
 import inspect
 import msvcrt
 import code_integrity_check
+from logconfig import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 tested_up = None
 DEMO = 0
@@ -26,6 +26,7 @@ CODE_INTEGRITY_CHECK_FLAG = False
 def start_algo(faulty, connections, num_connections, node_num):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
     logger.debug(f"Currently executing: {current_function_name}")
+    logger.error("Test error log")
 
     global FAULTY
     global tested_up

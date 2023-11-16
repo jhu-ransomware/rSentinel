@@ -2,8 +2,10 @@ import logging
 import inspect
 import os
 import hashlib
+from logconfig import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
+
 canary_file = "CanaryFile"
 canary_file_size = 1024
 

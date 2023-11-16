@@ -1,8 +1,8 @@
 import constants
 import inspect
-import logging
+from logconfig import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 def diagnose(tested_up, index):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name

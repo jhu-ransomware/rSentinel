@@ -2,39 +2,10 @@ import diagnose
 import sys
 import communication
 import constants
-import logging
 from colorama import Fore, Style, init
+from logconfig import get_logger
 
-init()
-
-class CustomFormatter(logging.Formatter):
-    """Logging Formatter to add colors and count warning / errors"""
-
-    RED = Fore.RED
-    RESET = Style.RESET_ALL
-    FORMAT = "%(levelname)s: %(message)s"
-
-    FORMATS = {
-        logging.DEBUG: RESET + FORMAT,
-        logging.INFO: RESET + FORMAT,
-        logging.WARNING: RESET + FORMAT,
-        logging.ERROR: RED + FORMAT,
-        logging.CRITICAL: RED + FORMAT
-    }
-
-    def format(self, record):
-        log_fmt = self.FORMATS.get(record.levelno)
-        formatter = logging.Formatter(log_fmt)
-        return formatter.format(record)
-
-logging.basicConfig(level=logging.DEBUG)
-
-# Create console handler with a higher log level
-ch = logging.StreamHandler()
-ch.setLevel(logging.DEBUG)
-
-# Create formatter and add it to the handlers
-ch.setFormatter(CustomFormatter())
+logger = get_logger(__name__)
 
 if sys.platform == "win32":
     import adaptive as adaptive
@@ -42,9 +13,6 @@ else: # darwin and Linux
     import adaptive_unix as adaptive
 
 def main():
-    logger = logging.getLogger(__name__)
-    logger.addHandler(ch)
-    logger.propagate = False
     logger.debug("Starting the application")
 
     this_node = int(input("What's your node number:"))

@@ -1,12 +1,12 @@
 import constants
 import entropy
 import inspect
-import logging
 import canary
 import fuzzysd
 import file_type_changes as ftc
+from logconfig import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 def run_detection(entropies):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name

@@ -1,8 +1,9 @@
 import os
-import logging
 import constants
+from logconfig import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
+
 tracked_magic_numbers = {}
 
 def get_magic_number(filename):

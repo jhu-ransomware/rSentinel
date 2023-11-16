@@ -4,9 +4,9 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives import serialization
-import logging
+from logconfig import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 directory_path = './'  # Replace with your directory path
 private_key_path = 'private_key.pem'  # Replace with your private key file path

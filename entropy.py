@@ -1,8 +1,8 @@
 from math import log2
-import logging
 import inspect
+from logconfig import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 def makehist(fh, flen):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name

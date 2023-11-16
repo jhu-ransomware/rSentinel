@@ -13,8 +13,9 @@ import communication
 import monitor
 import logging
 import inspect
+from logconfig import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 tested_up = None
 DEMO = 0
