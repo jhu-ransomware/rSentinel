@@ -292,8 +292,10 @@ def update_tested_up(new_arr, node, tested_node, code_integrity_status):
     logger.debug(f"{current_function_name} - Before updation of tested_up - {tested_up}")
 
     if code_integrity_status:
+        logger.debug(f"{current_function_name} - Code integrity passed for node - {tested_node}, code integrity value - {code_integrity_status}")
         tested_up[node] = tested_node
     else:
+        logger.error(f"{current_function_name} - Code integrity failed for node - {tested_node}, code integrity value - {code_integrity_status}")
         tested_up[node] = -1
 
     for i in range(constants.NUM_NODES):
