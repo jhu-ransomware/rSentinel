@@ -220,7 +220,10 @@ def update_arr(connections, num_connections, node_num):
             
             logging.debug(f"Socket creation successful to IP: {connections[i]['ip_addr']}")
             fault_status = communication.request_fault_status(sock)
-            sock.close()
+            try:
+                sock.close()
+            except Exception as e:
+                logging.error(f"{current_function_name} - Failed to close socket which is not alive")
 
             # Ask for code integrity if not done
             if not CODE_INTEGRITY_CHECK_FLAG:
@@ -232,7 +235,10 @@ def update_arr(connections, num_connections, node_num):
                 logging.debug(f"Socket creation successful to IP: {connections[i]['ip_addr']}")
                 code_integrity_status = communication.request_code_integrity_signature(sock)
                 CODE_INTEGRITY_CHECK_FLAG = True
-                sock.close()
+                try:
+                    sock.close()
+                except Exception as e:
+                    logging.error(f"{current_function_name} - Failed to close socket which is not alive")
 
             if (not FAULTY and not fault_status) or (FAULTY and fault_status):  # TODO: Add more logic here
                 sock = communication.init_client_to_server(connections[i]['ip_addr'])
@@ -241,7 +247,10 @@ def update_arr(connections, num_connections, node_num):
                     continue
                 new_arr = communication.request_arr(sock)
                 logging.debug(f"{current_function_name} - New array value received from {connections[i]['ip_addr']}  - {new_arr}")
-                sock.close()
+                try:
+                    sock.close()
+                except Exception as e:
+                    logging.error(f"{current_function_name} - Failed to close socket which is not alive")
 
                 sock = communication.init_client_to_server(connections[i]['ip_addr'])
 
@@ -249,7 +258,10 @@ def update_arr(connections, num_connections, node_num):
                     logging.debug(f"Issue creating socket to IP: {connections[i]['ip_addr']}")
                     continue
                 fault_status = communication.request_fault_status(sock)  # Check fault status again before updating array
-                sock.close()
+                try:
+                    sock.close()
+                except Exception as e:
+                    logging.error(f"{current_function_name} - Failed to close socket which is not alive")
                 
                 if (not FAULTY and not fault_status) or (FAULTY and fault_status):
                     update_tested_up(new_arr, node_num, connections[i]['node_num'])
@@ -260,7 +272,10 @@ def update_arr(connections, num_connections, node_num):
             logging.error(f"{current_function_name} - Socket error - {e}")
         
         finally:
-            sock.close()
+            try:
+                sock.close()
+            except Exception as e:
+                logging.error(f"{current_function_name} - Failed to close socket which is not alive")
 
     if not found_non_faulty:
         tested_up[node_num] = -1
