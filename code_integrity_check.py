@@ -77,24 +77,24 @@ def verify_signature(data, signature):
     except Exception as e:
         return False
 
-# Generate and sign the combined hash
-combined_hash = generate_combined_hash()
-print(f"Combined Hash: {combined_hash}")
+# # Generate and sign the combined hash
+# combined_hash = generate_combined_hash()
+# print(f"Combined Hash: {combined_hash}")
 
-signature = sign_data(combined_hash)
+# signature = sign_data(combined_hash)
 
-# Optionally, you can convert the signature to a hex string for easy display or storage
-signature_hex = signature.hex()
-print(f"Signature: {signature_hex}")
+# # Optionally, you can convert the signature to a hex string for easy display or storage
+# signature_hex = signature.hex()
+# print(f"Signature: {signature_hex}")
 
-# Convert the hex string back to bytes
-signature = bytes.fromhex(signature_hex)
+# # Convert the hex string back to bytes
+# signature = bytes.fromhex(signature_hex)
 
-signature_hex = signature  # Replace with the signature received
+# signature_hex = signature  # Replace with the signature received
 
-# Recompute the combined hash on the other machine
-combined_hash = generate_combined_hash()
+# # Recompute the combined hash on the other machine
+# combined_hash = generate_combined_hash()
 
-# Verify the signature
-is_valid = verify_signature(combined_hash, signature)
-print(f"Signature is valid: {is_valid}")
+# # Verify the signature
+# is_valid = verify_signature(combined_hash, signature)
+# print(f"Signature is valid: {is_valid}")
