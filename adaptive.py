@@ -265,7 +265,7 @@ def update_arr(connections, num_connections, node_num):
                     logger.error(f"{current_function_name} - Failed to close socket which is not alive")
                 
                 if (not FAULTY and not fault_status) or (FAULTY and fault_status):
-                    update_tested_up(new_arr, node_num, connections[i]['node_num'])
+                    update_tested_up(new_arr, node_num, connections[i]['node_num'], code_integrity_status)
                     found_non_faulty = True
                     break
 
@@ -283,7 +283,7 @@ def update_arr(connections, num_connections, node_num):
         print("Every connected node is faulty")
 
 
-def update_tested_up(new_arr, node, tested_node):
+def update_tested_up(new_arr, node, tested_node, code_integrity_status):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
     logger.debug(f"Currently executing: {current_function_name}")
 
@@ -291,7 +291,10 @@ def update_tested_up(new_arr, node, tested_node):
 
     logger.debug(f"{current_function_name} - Before updation of tested_up - {tested_up}")
 
-    tested_up[node] = tested_node
+    if code_integrity_status:
+        tested_up[node] = tested_node
+    else:
+        tested_up[node] = -1
 
     for i in range(constants.NUM_NODES):
         if i != node:
