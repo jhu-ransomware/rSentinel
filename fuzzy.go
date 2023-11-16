@@ -39,7 +39,7 @@ func checkFilesInDirectory(directory string) int {
 
 	err := filepath.WalkDir(directory, func(path string, d fs.DirEntry, errWalk error) error {
 		if errWalk != nil {
-			log.Printf("Error accessing %s: %v\n", path, errWalk)
+			// log.Printf("Error accessing %s: %v\n", path, errWalk)
 			return nil
 		}
 		if !d.IsDir() {
@@ -47,7 +47,7 @@ func checkFilesInDirectory(directory string) int {
 			baseName := baseNameRegex.ReplaceAllString(d.Name(), "$1")
 
 			// Log the base name and extension for debugging
-			log.Printf("File: %s, Base Name: %s\n", d.Name(), baseName)
+			// log.Printf("File: %s, Base Name: %s\n", d.Name(), baseName)
 
 			// Add the file to the similarFiles map
 			similarFiles[baseName] = append(similarFiles[baseName], path)
@@ -55,13 +55,13 @@ func checkFilesInDirectory(directory string) int {
 			// Get the file info
 			fileInfo, errFileInfo := d.Info()
 			if errFileInfo != nil {
-				log.Printf("Error getting file info for %s: %v\n", path, errFileInfo)
+				// log.Printf("Error getting file info for %s: %v\n", path, errFileInfo)
 				return nil
 			}
 
 			// Skip files smaller than 20 KB or larger than 200 MB
 			if fileInfo.Size() < 20*1024 || fileInfo.Size() > 200*1024*1024 {
-				log.Printf("Skipping file %s due to size restrictions (size: %d bytes)\n", path, fileInfo.Size())
+				// log.Printf("Skipping file %s due to size restrictions (size: %d bytes)\n", path, fileInfo.Size())
 				return nil
 			}
 		}
@@ -69,7 +69,7 @@ func checkFilesInDirectory(directory string) int {
 	})
 
 	if err != nil {
-		log.Printf("Error walking the directory: %v\n", err)
+		// log.Printf("Error walking the directory: %v\n", err)
 		return -1
 	}
 
@@ -136,5 +136,5 @@ func main() {
 	result := checkFilesInDirectory(directory)
 
 	// Print the result instead of using os.Exit
-	fmt.Print(result)
+	fmt.Printf("Result: %d\n", result)
 }

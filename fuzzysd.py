@@ -1,12 +1,22 @@
 import subprocess
 import sys
+import re
 
 def run_go_script(directory_path):
     try:
         output = subprocess.check_output(['go', 'run', 'fuzzy.go', directory_path], text=True, stderr=subprocess.STDOUT)
-        return int(output.strip())
+        
+        # Use a regular expression to extract the numeric result from the output
+        match = re.search(r'Result: (\d+)', output)
+        if match:
+            result = int(match.group(1))
+            return result, None  # Return result and no error
+        else:
+            return None, f"Error: Could not extract result from output: {output}"
+    
     except subprocess.CalledProcessError as e:
-        return f"Error: {e.output.strip()}"
+        error_message = f"Error: {e.output.strip()}"
+        return None, error_message  # Return no result and error message
 
 if __name__ == "__main__":
     # Check if the directory path is provided as a command-line argument
@@ -17,9 +27,13 @@ if __name__ == "__main__":
     # Get the directory path from the command-line argument
     directory_path = sys.argv[1]
 
-    # Call the Go script and capture the output
-    result = run_go_script("/c/cygwin/cgdrive/Users/")
+    # Call the Go script and capture the result and error message
+    result, error_message = run_go_script(directory_path)
 
-    # Check if the result is an integer and is either 0 or 1
-    if not isinstance(result, int) or result not in [0, 1]:
-        raise ValueError(f"Invalid result: {result}. Expected 0 or 1.")
+    # Check for errors
+    if error_message:
+        print(error_message)
+        sys.exit(1)
+
+    # Print the result
+    print(f"Result: {result}")
