@@ -2,9 +2,9 @@ import subprocess
 import sys
 import re
 
-def run_go_script(directory_path):
+def run_go_script():
     try:
-        output = subprocess.check_output(['go', 'run', 'fuzzy.go', directory_path], text=True, stderr=subprocess.STDOUT)
+        output = subprocess.check_output(['go', 'run', 'fuzzy.go'], text=True, stderr=subprocess.STDOUT)
         
         # Use a regular expression to extract the numeric result from the output
         match = re.search(r'Result: (\d+)', output)
@@ -19,16 +19,8 @@ def run_go_script(directory_path):
         return None, error_message  # Return no result and error message
 
 if __name__ == "__main__":
-    # Check if the directory path is provided as a command-line argument
-    if len(sys.argv) != 2:
-        print("Usage: python script.py /path/to/your/directory")
-        sys.exit(1)
-
-    # Get the directory path from the command-line argument
-    directory_path = sys.argv[1]
-
     # Call the Go script and capture the result and error message
-    result, error_message = run_go_script(directory_path)
+    result, error_message = run_go_script()
 
     # Check for errors
     if error_message:

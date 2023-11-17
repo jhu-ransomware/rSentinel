@@ -11,6 +11,8 @@ import (
 	"github.com/eciavatta/sdhash"
 )
 
+const defaultPath = `C:\Users\your_username\Documents`
+
 func calculateSimilarity(filename1, filename2 string) (int, error) {
 	factoryA, err := sdhash.CreateSdbfFromFilename(filename1)
 	if err != nil {
@@ -28,9 +30,13 @@ func calculateSimilarity(filename1, filename2 string) (int, error) {
 }
 
 func checkFilesInDirectory(directory string) int {
+	// Check if the directory exists
+	if _, err := os.Stat(directory); os.IsNotExist(err) {
+		log.Printf("Error: Directory %s does not exist.\n", directory)
+		os.Exit(1)
+	}
 	dissimilarCount := 0
 	totalFileCount := 0
-
 	// Create a map to store similar file names
 	similarFiles := make(map[string][]string)
 
@@ -127,12 +133,14 @@ func checkFilesInDirectory(directory string) int {
 }
 
 func main() {
-	if len(os.Args) != 2 {
-		log.Println("Usage: go run main.go /path/to/check")
-		return
-	}
+	// Use the default path if no command-line argument is provided
+	directory := defaultPath
 
-	directory := os.Args[1]
+	// Alternatively, you can check if a command-line argument is provided and use it if available
+	// if len(os.Args) == 2 {
+	// 	directory = os.Args[1]
+	// }
+
 	result := checkFilesInDirectory(directory)
 
 	// Print the result instead of using os.Exit
