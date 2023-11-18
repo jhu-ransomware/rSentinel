@@ -6,6 +6,7 @@ import struct
 import constants
 import inspect
 import code_integrity_check
+import os
 from logconfig import get_logger
 
 logger = get_logger(__name__)
@@ -173,7 +174,7 @@ def request_code_integrity_signature(sock):
     code_integrity_verified = False
 
     try:
-        combined_hash = code_integrity_check.generate_combined_hash()
+        combined_hash = os.environ.get(constants.COMBINED_HASH_VARIABLE)
         test_msg_data = struct.pack('!I', constants.CODE_INTEGRITY_MSG)  # Pack the TEST_MSG as a 4-byte integer
         sock.send(test_msg_data)
         logger.debug(f"Code integrity message request sent successfully")
@@ -195,7 +196,7 @@ def send_code_integrity_signature(sock):
     logger.debug(f"Currently executing: {current_function_name}")
     
     try:
-        combined_hash = code_integrity_check.generate_combined_hash()
+        combined_hash = os.getenv(constants.COMBINED_HASH_VARIABLE, constants.ENV_VAR_DEFAULT_VALUE)
         signed_hash = code_integrity_check.sign_data(combined_hash)
         sock.sendall(signed_hash)
         logger.debug(f"Code integrity message sent successfully")
