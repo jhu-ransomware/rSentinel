@@ -23,7 +23,7 @@ def check_magic_numbers():
     if not tracked_magic_numbers:
         logger.debug("Saving magic numbers for the first time")
         save_magic_numbers(files_to_track)
-        logger.info(f"Magic numbers saved successfully for the first time - {tracked_magic_numbers}")
+        logger.debug(f"Magic numbers saved successfully for the first time - {tracked_magic_numbers}")
         return False  # No changes detected on the first run
 
     changed_files_count = 0
@@ -31,10 +31,10 @@ def check_magic_numbers():
 
     for file in files_to_track:
         current_magic_number = get_magic_number(file).hex()
-        logger.info(f"Newly calculated magic number of {file} - {current_magic_number}")
+        logger.debug(f"Newly calculated magic number of {file} - {current_magic_number}")
         if file in tracked_magic_numbers:
             if tracked_magic_numbers[file] != current_magic_number:
-                logger.info(f"WARNING: Magic number for {file} has changed to {current_magic_number}")
+                logger.error(f"WARNING: Magic number for {file} has changed to {current_magic_number}")
                 changed_files_count += 1
             else:
                 logger.debug(f"Magic number for {file} remains the same.")

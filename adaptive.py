@@ -114,8 +114,7 @@ def adaptive_dsd(faulty, connections, num_connections, node_num, lookup):
                 print("Invalid input. Enter 1 or 0 to change fault status, or 2 to diagnose.")
                 
         if curr_time > constants.TESTING_INTERVAL:
-            logger.debug(f"{current_function_name} - Starting the testing now after {constants.TESTING_INTERVAL} seconds")
-            logger.info(f"{current_function_name} - Tested up array at testing interval - {tested_up}")
+            logger.info(f"{current_function_name} - Starting the testing now after {constants.TESTING_INTERVAL} seconds. Tested up array - {tested_up}")
             update_arr(connections, num_connections, node_num)
             if DEMO:
                 diagnosis = diagnose.diagnose(tested_up, node_num)
@@ -298,7 +297,7 @@ def update_tested_up(new_arr, node, tested_node, code_integrity_status):
     # else:
     #     logger.error(f"{current_function_name} - Code integrity failed for node - {tested_node}, code integrity value - {code_integrity_status}")
     #     tested_up[node] = -1
-    
+
     tested_up[node] = tested_node
 
     for i in range(constants.NUM_NODES):
