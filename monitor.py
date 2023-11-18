@@ -36,6 +36,7 @@ def run_detection(entropies):
     
 
     if cnt > 0:
+        logger.error(f"{current_function_name} = Node is faulty")
         return 1
     else:
         return 0
