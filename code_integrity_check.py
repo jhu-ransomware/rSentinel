@@ -20,22 +20,21 @@ def hash_file(file_path):
         while buf:
             hasher.update(buf)
             buf = f.read(4096)
-    return hasher.digest()
+    return hasher.hexdigest()  # Return the hexadecimal digest
 
 def generate_combined_hash():
     """Generate a combined hash of all Python files in the directory."""
-    global directory_path
     combined_hasher = hashlib.sha256()
     for root, _, files in os.walk(directory_path):
         for file in files:
             if file.endswith('.py'):
                 file_path = os.path.join(root, file)
-                combined_hasher.update(hash_file(file_path))
-    return combined_hasher.digest()
+                file_hash = hash_file(file_path)
+                combined_hasher.update(file_hash.encode())  # Convert hexdigest back to bytes
+    return combined_hasher.hexdigest()  # Return the hexadecimal digest
 
 def sign_data(data):
     """Sign data using a private RSA key."""
-    global private_key_path
     with open(private_key_path, 'rb') as key_file:
         private_key = serialization.load_pem_private_key(
             key_file.read(),
@@ -43,8 +42,11 @@ def sign_data(data):
             backend=default_backend()
         )
 
+    # Convert hexdigest back to bytes for signing
+    data_bytes = bytes.fromhex(data)
+
     signature = private_key.sign(
-        data,
+        data_bytes,
         padding.PSS(
             mgf=padding.MGF1(hashes.SHA256()),
             salt_length=padding.PSS.MAX_LENGTH
@@ -53,20 +55,21 @@ def sign_data(data):
     )
     return signature
 
-
 def verify_signature(data, signature):
     """Verify the signature using the public RSA key."""
-    global public_key_path
     with open(public_key_path, 'rb') as key_file:
         public_key = serialization.load_pem_public_key(
             key_file.read(),
             backend=default_backend()
         )
 
+    # Convert hexdigest back to bytes for verification
+    data_bytes = bytes.fromhex(data)
+
     try:
         public_key.verify(
             signature,
-            data,
+            data_bytes,
             padding.PSS(
                 mgf=padding.MGF1(hashes.SHA256()),
                 salt_length=padding.PSS.MAX_LENGTH
@@ -75,26 +78,27 @@ def verify_signature(data, signature):
         )
         return True
     except Exception as e:
+        logger.error(f"Verification failed: {e}")
         return False
 
 # # Generate and sign the combined hash
 # combined_hash = generate_combined_hash()
+# os.environ['COMBINED_HASH'] = combined_hash
 # print(f"Combined Hash: {combined_hash}")
 
+# # Sign the combined hash
 # signature = sign_data(combined_hash)
 
-# # Optionally, you can convert the signature to a hex string for easy display or storage
+# # Convert the signature to a hex string for display or storage
 # signature_hex = signature.hex()
 # print(f"Signature: {signature_hex}")
 
-# # Convert the hex string back to bytes
-# signature = bytes.fromhex(signature_hex)
-
-# signature_hex = signature  # Replace with the signature received
+# # For verification, convert the hex string back to bytes
+# signature_bytes = bytes.fromhex(signature_hex)
 
 # # Recompute the combined hash on the other machine
-# combined_hash = generate_combined_hash()
+# combined_hash = os.getenv('COMBINED_HASH')
 
 # # Verify the signature
-# is_valid = verify_signature(combined_hash, signature)
+# is_valid = verify_signature(combined_hash, signature_bytes)
 # print(f"Signature is valid: {is_valid}")
