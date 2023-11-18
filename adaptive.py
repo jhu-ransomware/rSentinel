@@ -87,6 +87,7 @@ def adaptive_dsd(faulty, connections, num_connections, node_num, lookup):
     start = time.time()
 
     while True:
+        logger.info(f"{current_function_name} - Outer while loop started")
         end = time.time()
         curr_time = end - start
 
