@@ -55,6 +55,9 @@ def sign_data(data):
     )
     return signature
 
+def compare_hash(received_hash, original_hash):
+    return received_hash == original_hash
+
 def verify_signature(data, signature):
     """Verify the signature using the public RSA key."""
     with open(public_key_path, 'rb') as key_file:
