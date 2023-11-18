@@ -14,26 +14,26 @@ def run_detection(entropies):
 
     cnt = 0 # counter for check fail: entropy increasing or canary modification
 
-    logging.debug(f"Currently executing: Entropy Check")
-    encrp_files = update_entropy(entropies)
-    if encrp_files / len(entropies) > constants.ENTROPHY_INCREASE_BATCH:
-        cnt += 1
+    # logging.debug(f"Currently executing: Entropy Check")
+    # encrp_files = update_entropy(entropies)
+    # if encrp_files / len(entropies) > constants.ENTROPHY_INCREASE_BATCH:
+    #     cnt += 1
 
-    logging.debug(f"Currently executing: Canary File Check")
-    ori_digest = canary.createCanary()
-    if canary.chkCanaryChange(canary.canary_file, ori_digest):
-        cnt += 1
+    # logging.debug(f"Currently executing: Canary File Check")
+    # ori_digest = canary.createCanary()
+    # if canary.chkCanaryChange(canary.canary_file, ori_digest):
+    #     cnt += 1
     
-    logging.debug(f"Currently executing: File Type Changes")
-    if ftc.check_magic_numbers():
-        cnt += 1
+    # logging.debug(f"Currently executing: File Type Changes")
+    # if ftc.check_magic_numbers():
+    #     cnt += 1
     logging.debug(f"Currently executing: Fuzzy Hashing")
     # Assuming fuzzysd.directory_path is set appropriately before calling run_go_script
 
     result_fuzzy = fuzzysd.run_go_script()
 
     status, _ = result_fuzzy  # Extract the status from the tuple
-
+    print(f'the status is {status}')
     if not isinstance(status, int) or status not in [0, 1]:
         raise ValueError(f"Invalid status from fuzzysd: {status}. Expected 0 or 1.")
     
@@ -47,14 +47,14 @@ def run_detection(entropies):
     
     
 
-def update_entropy(entropies):
-    encrp_files = 0
-    for curr in entropies:
-        entr = entropy.calc_entropy_file(curr['filename'])
-        if entr == -1:
-            encrp_files += 1
-        elif (entr - curr['entropy']) / curr['entropy'] > constants.ENTROPHY_INCREASE_FILE:
-            encrp_files += 1
-        curr['entropy'] = entr
+# def update_entropy(entropies):
+#     encrp_files = 0
+#     for curr in entropies:
+#         entr = entropy.calc_entropy_file(curr['filename'])
+#         if entr == -1:
+#             encrp_files += 1
+#         elif (entr - curr['entropy']) / curr['entropy'] > constants.ENTROPHY_INCREASE_FILE:
+#             encrp_files += 1
+#         curr['entropy'] = entr
 
-    return encrp_files
+#     return encrp_files
