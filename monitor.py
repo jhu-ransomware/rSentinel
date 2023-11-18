@@ -32,13 +32,13 @@ def run_detection(entropies):
 
     result_fuzzy = fuzzysd.run_go_script()
 
-    if not isinstance(result_fuzzy, int) or result_fuzzy not in [0, 1]:
-        raise ValueError(f"Invalid result from fuzzysd: {result_fuzzy}. Expected 0 or 1.")
+    status, _ = result_fuzzy  # Extract the status from the tuple
 
-    if result_fuzzy == 1:
-        cnt += 1
-
+    if not isinstance(status, int) or status not in [0, 1]:
+        raise ValueError(f"Invalid status from fuzzysd: {status}. Expected 0 or 1.")
     
+    if status == 1:
+        cnt += 1
 
     if cnt > 0:
         return 1

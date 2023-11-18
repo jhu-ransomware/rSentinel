@@ -11,7 +11,7 @@ import (
 	"github.com/eciavatta/sdhash"
 )
 
-const defaultPath = `C:\Users\your_username\Documents`
+const defaultPath = `C:\Users\RWareUser\Documents`
 
 func calculateSimilarity(filename1, filename2 string) (int, error) {
 	factoryA, err := sdhash.CreateSdbfFromFilename(filename1)
@@ -124,7 +124,7 @@ func checkFilesInDirectory(directory string) int {
 		}
 	}
 
-	dissimilarityThreshold := 0.4
+	dissimilarityThreshold := 0.6
 	log.Printf("Dissimilar Count: %d, Total File Count: %d\n", dissimilarCount, totalFileCount)
 	if float64(dissimilarCount)/float64(totalFileCount) >= dissimilarityThreshold {
 		return 1
