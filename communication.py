@@ -83,6 +83,7 @@ def send_fault_status(sock, faulty):
     if faulty:
         fault_val = "Lorem ipsum"
         status = struct.pack('!I', hash(fault_val, len(constants.NON_FAULTY_VAL)))
+        logger.error(f"{current_function_name} - Currently node is faulty hence sending faulty value")
 
     try:
         sock.sendall(status)

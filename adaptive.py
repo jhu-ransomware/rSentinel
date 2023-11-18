@@ -298,6 +298,7 @@ def update_tested_up(new_arr, node, tested_node, code_integrity_status):
     # else:
     #     logger.error(f"{current_function_name} - Code integrity failed for node - {tested_node}, code integrity value - {code_integrity_status}")
     #     tested_up[node] = -1
+    
     tested_up[node] = tested_node
 
     for i in range(constants.NUM_NODES):
