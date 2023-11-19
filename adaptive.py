@@ -121,9 +121,10 @@ def adaptive_dsd(faulty, connections, num_connections, node_num, lookup):
             if DEMO:
                 diagnosis = diagnose.diagnose(tested_up, node_num)
                 
-
+            detection_status = monitor.run_detection(lookup)
+            logger.info(f"{current_function_name} - Detection status - {detection_status}")
             # update lookup table
-            if not FAULTY and monitor.run_detection(lookup):
+            if not FAULTY and detection_status:
                 FAULTY = 1
             
             #tested_up = [0,2,0]
