@@ -19,18 +19,15 @@ from logconfig import get_logger
 logger = get_logger(__name__)
 
 tested_up = None
-DEMO = 0
-FAULTY = None
+FAULTY = 1
 CODE_INTEGRITY_CHECK_FLAG = False
 
 def start_algo(faulty, connections, num_connections, node_num):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
     logger.debug(f"Currently executing: {current_function_name}")
-    logger.error("Test error log")
 
     global FAULTY
     global tested_up
-    global DEMO
 
     FAULTY = faulty
     tested_up = [-1] * constants.NUM_NODES
@@ -40,8 +37,6 @@ def start_algo(faulty, connections, num_connections, node_num):
     # Creating socket
     server_fd.bind(('0.0.0.0', constants.PORT))
     server_fd.listen(10)
-
-    DEMO = int(input("Please enter if you wish to send results to a demo (1 for yes, 0 for no):\n"))
 
     # Start the thread
     threading.Thread(target=receive_thread, args=(server_fd,)).start()
@@ -81,7 +76,6 @@ def adaptive_dsd(faulty, connections, num_connections, node_num, lookup):
 
     global FAULTY
     global tested_up
-    global DEMO
 
     FAULTY = faulty
 
@@ -99,11 +93,6 @@ def adaptive_dsd(faulty, connections, num_connections, node_num, lookup):
             except Exception as e:
                 logger.error(f"Input value is incorrect - {e}")
                 continue
-            
-            # Commenting out below for now to not allow manual update of fault
-            # if input_value in [0, 1]:
-            #     FAULTY = input_value
-            #     print(f"Fault status changed to {FAULTY}")
 
             if input_value == 2:
                 diagnosis = diagnose.diagnose(tested_up, node_num)
@@ -118,8 +107,6 @@ def adaptive_dsd(faulty, connections, num_connections, node_num, lookup):
         if curr_time > constants.TESTING_INTERVAL:
             logger.info(f"{current_function_name} - Starting the testing now after {constants.TESTING_INTERVAL} seconds. Tested up array - {tested_up}")
             update_arr(connections, num_connections, node_num)
-            if DEMO:
-                diagnosis = diagnose.diagnose(tested_up, node_num)
                 
             detection_status = monitor.run_detection(lookup)
             logger.info(f"{current_function_name} - Detection status - {detection_status}")
@@ -267,6 +254,7 @@ def update_arr(connections, num_connections, node_num):
                     logger.error(f"Socket not created to IP: {connections[i]['ip_addr']}")
                     continue
                 fault_status = communication.request_fault_status(sock)  # Check fault status again before updating array
+                logger.info(f"{current_function_name} - received fault status from {connections[i]['ip_addr']}  - {fault_status}")
                 try:
                     sock.close()
                 except Exception as e:
