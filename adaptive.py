@@ -209,6 +209,7 @@ def update_arr(connections, num_connections, node_num):
 
     global tested_up
     global CODE_INTEGRITY_CHECK_FLAG
+    global FAULTY
 
     found_non_faulty = False
     for i in range(num_connections):
