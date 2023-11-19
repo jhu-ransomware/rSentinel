@@ -19,31 +19,28 @@ def run_detection(entropies):
     if encrp_files / len(entropies) > constants.ENTROPHY_INCREASE_BATCH:
         cnt += 1
 
-    logging.debug(f"Currently executing: Canary File Check")
-    ori_digest = canary.createCanary()
-    if canary.chkCanaryChange(canary.canary_file, ori_digest):
-        cnt += 1
-    
     logging.debug(f"Currently executing: File Type Changes")
     if ftc.check_magic_numbers():
         cnt += 1
+
+    logging.debug(f"Currently executing: Canary File Check")
+    result_canary = canary.execute_canary_logic()
+    if result_canary:
+        cnt += 1
+  
     logging.debug(f"Currently executing: Fuzzy Hashing")
-    # Assuming fuzzysd.directory_path is set appropriately before calling run_go_script
+    result_fuzzy = fuzzysd.run_go_script()
+    status, _ = result_fuzzy  # Extract the status from the tuple
+    logging.info(f'the status is {status}')
+    if not isinstance(status, int) or status not in [0, 1]:
+        raise ValueError(f"Invalid status from fuzzysd: {status}. Expected 0 or 1.")
+    if status == 1:
+        cnt += 1
 
-    # result_fuzzy = fuzzysd.run_go_script()
-
-    # status, _ = result_fuzzy  # Extract the status from the tuple
-    # print(f'the status is {status}')
-    # if not isinstance(status, int) or status not in [0, 1]:
-    #     raise ValueError(f"Invalid status from fuzzysd: {status}. Expected 0 or 1.")
-    
-    # if status == 1:
-    #     cnt += 1
-
-    # if cnt > 0:
-    #     return 1
-    # else:
-    #     return 0
+    if cnt > 0:
+        return 1
+    else:
+        return 0
     
     
 
