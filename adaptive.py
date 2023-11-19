@@ -160,6 +160,7 @@ def receiving(server_fd):
     k = 0
 
     global tested_up
+    global FAULTY
 
     try:
         while True:
@@ -182,6 +183,7 @@ def receiving(server_fd):
                     msg_type = communication.receive_msg(s)
                     if msg_type == constants.TEST_MSG:
                         try:
+                            logger.error(f"{current_function_name} - Sending fault status - {FAULTY}")
                             communication.send_fault_status(s, FAULTY)
                             logger.debug(f"{current_function_name} - Message Type - TEST_MSG - sent fault status successfully")
                         except Exception as e:
