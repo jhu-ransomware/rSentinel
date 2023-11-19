@@ -88,22 +88,6 @@ def adaptive_dsd(faulty, connections, num_connections, node_num, lookup):
     # print("\n*****At any point in time enter a new fault status (1 or 0) or 2 to diagnose:*****")
     start = time.time()
 
-    logger.debug(f"{current_function_name} - Initiating code integrity check")
-    sock = communication.init_client_to_server(connections[i]['ip_addr'])
-    if sock is None:
-        logger.error(f"Socket not created to IP: {connections[i]['ip_addr']}")
-
-    logger.debug(f"Socket creation successful to IP: {connections[i]['ip_addr']}")
-    code_integrity_status = communication.request_code_integrity_status(sock)
-
-    if not code_integrity_status:
-        FAULTY = 1
-
-    try:
-        sock.close()
-    except Exception as e:
-        logger.error(f"{current_function_name} - Failed to close socket which is not alive")
-
     while True:
         end = time.time()
         curr_time = end - start
@@ -229,6 +213,24 @@ def update_arr(connections, num_connections, node_num):
     found_non_faulty = False
     for i in range(num_connections):
         try:
+
+            if not CODE_INTEGRITY_CHECK_FLAG:
+                logger.debug(f"{current_function_name} - Initiating code integrity check")
+                sock = communication.init_client_to_server(connections[i]['ip_addr'])
+                if sock is None:
+                    logger.error(f"Socket not created to IP: {connections[i]['ip_addr']}")
+
+                logger.debug(f"Socket creation successful to IP: {connections[i]['ip_addr']}")
+                code_integrity_status = communication.request_code_integrity_status(sock)
+                CODE_INTEGRITY_CHECK_FLAG = True
+
+                if not code_integrity_status:
+                    FAULTY = 1
+
+                try:
+                    sock.close()
+                except Exception as e:
+                    logger.error(f"{current_function_name} - Failed to close socket which is not alive")
 
             # Ask for fault status
             sock = communication.init_client_to_server(connections[i]['ip_addr'])
