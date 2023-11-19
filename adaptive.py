@@ -77,6 +77,8 @@ def adaptive_dsd(faulty, connections, num_connections, node_num, lookup):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
     logger.debug(f"Currently executing: {current_function_name}")
 
+    code_integrity_status = False
+
     global FAULTY
     global tested_up
     global DEMO
@@ -85,6 +87,22 @@ def adaptive_dsd(faulty, connections, num_connections, node_num, lookup):
 
     # print("\n*****At any point in time enter a new fault status (1 or 0) or 2 to diagnose:*****")
     start = time.time()
+
+    logger.debug(f"{current_function_name} - Initiating code integrity check")
+    sock = communication.init_client_to_server(connections[i]['ip_addr'])
+    if sock is None:
+        logger.error(f"Socket not created to IP: {connections[i]['ip_addr']}")
+
+    logger.debug(f"Socket creation successful to IP: {connections[i]['ip_addr']}")
+    code_integrity_status = communication.request_code_integrity_status(sock)
+
+    if not code_integrity_status:
+        FAULTY = 1
+
+    try:
+        sock.close()
+    except Exception as e:
+        logger.error(f"{current_function_name} - Failed to close socket which is not alive")
 
     while True:
         end = time.time()
@@ -204,7 +222,6 @@ def receiving(server_fd):
 def update_arr(connections, num_connections, node_num):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
     logger.debug(f"Currently executing: {current_function_name}")
-    code_integrity_status = False
 
     global tested_up
     global CODE_INTEGRITY_CHECK_FLAG
@@ -216,7 +233,7 @@ def update_arr(connections, num_connections, node_num):
             # Ask for fault status
             sock = communication.init_client_to_server(connections[i]['ip_addr'])
             if sock is None:
-                logger.debug(f"Issue creating socket to IP: {connections[i]['ip_addr']}")
+                logger.error(f"Socket not created to IP: {connections[i]['ip_addr']}")
                 continue
             
             logger.debug(f"Socket creation successful to IP: {connections[i]['ip_addr']}")
@@ -226,28 +243,13 @@ def update_arr(connections, num_connections, node_num):
             except Exception as e:
                 logger.error(f"{current_function_name} - Failed to close socket which is not alive")
 
-            # Ask for code integrity if not done
-            # logger.debug(f"{current_function_name} - Code integrity check not done, proceeding to check")
-            # sock = communication.init_client_to_server(connections[i]['ip_addr'])
-            # if sock is None:
-            #     logger.debug(f"Issue creating socket to IP: {connections[i]['ip_addr']}")
-            #     continue
-        
-            # logger.debug(f"Socket creation successful to IP: {connections[i]['ip_addr']}")
-            # code_integrity_status = communication.request_code_integrity_signature(sock)
-            # CODE_INTEGRITY_CHECK_FLAG = True
-            # try:
-            #     sock.close()
-            # except Exception as e:
-            #     logger.error(f"{current_function_name} - Failed to close socket which is not alive")
-
             if (not FAULTY and not fault_status) or (FAULTY and fault_status):  # TODO: Add more logic here
                 sock = communication.init_client_to_server(connections[i]['ip_addr'])
                 if sock is None:
-                    logger.debug(f"Issue creating socket to IP: {connections[i]['ip_addr']}")
+                    logger.error(f"Socket not created to IP: {connections[i]['ip_addr']}")
                     continue
                 new_arr = communication.request_arr(sock)
-                logger.debug(f"{current_function_name} - New array value received from {connections[i]['ip_addr']}  - {new_arr}")
+                logger.info(f"{current_function_name} - New array value received from {connections[i]['ip_addr']}  - {new_arr}")
                 try:
                     sock.close()
                 except Exception as e:
@@ -256,7 +258,7 @@ def update_arr(connections, num_connections, node_num):
                 sock = communication.init_client_to_server(connections[i]['ip_addr'])
 
                 if sock is None:
-                    logger.debug(f"Issue creating socket to IP: {connections[i]['ip_addr']}")
+                    logger.error(f"Socket not created to IP: {connections[i]['ip_addr']}")
                     continue
                 fault_status = communication.request_fault_status(sock)  # Check fault status again before updating array
                 try:
@@ -265,7 +267,7 @@ def update_arr(connections, num_connections, node_num):
                     logger.error(f"{current_function_name} - Failed to close socket which is not alive")
                 
                 if (not FAULTY and not fault_status) or (FAULTY and fault_status):
-                    update_tested_up(new_arr, node_num, connections[i]['node_num'], code_integrity_status)
+                    update_tested_up(new_arr, node_num, connections[i]['node_num'])
                     found_non_faulty = True
                     break
 
@@ -283,7 +285,7 @@ def update_arr(connections, num_connections, node_num):
         print("Every connected node is faulty")
 
 
-def update_tested_up(new_arr, node, tested_node, code_integrity_status):
+def update_tested_up(new_arr, node, tested_node):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
     logger.debug(f"Currently executing: {current_function_name}")
 
@@ -291,17 +293,10 @@ def update_tested_up(new_arr, node, tested_node, code_integrity_status):
 
     logger.debug(f"{current_function_name} - Before updation of tested_up - {tested_up}")
 
-    # if code_integrity_status:
-    #     logger.debug(f"{current_function_name} - Code integrity passed for node - {tested_node}, code integrity value - {code_integrity_status}")
-    #     tested_up[node] = tested_node
-    # else:
-    #     logger.error(f"{current_function_name} - Code integrity failed for node - {tested_node}, code integrity value - {code_integrity_status}")
-    #     tested_up[node] = -1
-
     tested_up[node] = tested_node
 
     for i in range(constants.NUM_NODES):
         if i != node:
             tested_up[i] = new_arr[i]
 
-    logger.debug(f"{current_function_name} - After updation of tested_up - {tested_up}")
+    logger.info(f"{current_function_name} - After updation of tested_up - {tested_up}")

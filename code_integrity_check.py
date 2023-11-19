@@ -84,24 +84,25 @@ def verify_signature(data, signature):
         logger.error(f"Verification failed: {e}")
         return False
 
-# # Generate and sign the combined hash
-# combined_hash = generate_combined_hash()
-# os.environ['COMBINED_HASH'] = combined_hash
-# print(f"Combined Hash: {combined_hash}")
+if __name__ == "__main__":
+    # Generate and sign the combined hash
+    combined_hash = generate_combined_hash()
+    os.environ['COMBINED_HASH'] = combined_hash
+    print(f"Combined Hash: {combined_hash}")
 
-# # Sign the combined hash
-# signature = sign_data(combined_hash)
+    # Sign the combined hash
+    signature = sign_data(combined_hash)
 
-# # Convert the signature to a hex string for display or storage
-# signature_hex = signature.hex()
-# print(f"Signature: {signature_hex}")
+    # Convert the signature to a hex string for display or storage
+    signature_hex = signature.hex()
+    print(f"Signature: {signature_hex}")
 
-# # For verification, convert the hex string back to bytes
-# signature_bytes = bytes.fromhex(signature_hex)
+    # For verification, convert the hex string back to bytes
+    signature_bytes = bytes.fromhex(signature_hex)
 
-# # Recompute the combined hash on the other machine
-# combined_hash = os.getenv('COMBINED_HASH')
+    # Recompute the combined hash on the other machine
+    combined_hash = os.getenv('COMBINED_HASH')
 
-# # Verify the signature
-# is_valid = verify_signature(combined_hash, signature_bytes)
-# print(f"Signature is valid: {is_valid}")
+    # Verify the signature
+    is_valid = verify_signature(combined_hash, signature_bytes)
+    print(f"Signature is valid: {is_valid}")

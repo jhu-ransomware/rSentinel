@@ -169,13 +169,13 @@ def request_fault_status(sock):
         return 0
     return 1
 
-def request_code_integrity_signature(sock):
+def request_code_integrity_status(sock):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
     logger.debug(f"Currently executing: {current_function_name}")
     code_integrity_verified = False
 
     try:
-        combined_hash = os.environ.get(constants.COMBINED_HASH_VARIABLE)
+        combined_hash = code_integrity_check.generate_combined_hash()
         test_msg_data = struct.pack('!I', constants.CODE_INTEGRITY_MSG)  # Pack the TEST_MSG as a 4-byte integer
         sock.send(test_msg_data)
         logger.debug(f"Code integrity message request sent successfully")
