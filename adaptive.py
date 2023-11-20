@@ -32,6 +32,12 @@ def start_algo(faulty, connections, num_connections, node_num):
     FAULTY = faulty
     tested_up = [-1] * constants.NUM_NODES
 
+    # Check if the './test' directory exists
+    test_directory = "./test"
+    if not os.path.exists(test_directory):
+        logging.error(f"{current_function_name} - The '{test_directory}' directory does not exist.")
+        return
+
     server_fd = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     # Creating socket
@@ -44,17 +50,18 @@ def start_algo(faulty, connections, num_connections, node_num):
     threading.Thread(target=receive_thread, args=(server_fd,)).start()
 
     # Build the initial lookup table
-    path = "./test"
-    files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
+    files = [f for f in os.listdir(test_directory) if os.path.isfile(os.path.join(test_directory, f))]
     files = [f for f in files if f not in ['.', '..']]
     file_count = len(files)
 
-    logging.debug(f"File count in 'test' directory: {file_count}")
-    
+    if file_count == 0:
+        logging.warning(f"{current_function_name} - There are no files in the '{test_directory}' directory.")
+
+    logging.debug(f"File count in '{test_directory}' directory: {file_count}")
 
     file_lookup = []
     for file in files:
-        temp_filename = os.path.join(path, file)
+        temp_filename = os.path.join(test_directory, file)
         entrophy = entropy.calc_entropy_file(temp_filename)
         file_lookup.append({'filename': temp_filename, 'entropy': entrophy})
 
@@ -62,12 +69,8 @@ def start_algo(faulty, connections, num_connections, node_num):
     ready = 0
     while not ready:
         ready = int(input("Enter 1 to begin testing other nodes:\n"))
-    
+
     threading.Thread(target=adaptive_dsd, args=(faulty, connections, num_connections, node_num, file_lookup)).start()
-
-    # adaptive_dsd(faulty, connections, num_connections, node_num, file_lookup)
-
-    # server_fd.close()
 
 
 def adaptive_dsd(faulty, connections, num_connections, node_num, lookup):
