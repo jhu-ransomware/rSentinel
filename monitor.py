@@ -16,7 +16,7 @@ def run_detection(entropies):
 
     logger.info(f"Currently executing: Entropy Check")
     encrp_files = update_entropy(entropies)
-    if encrp_files / len(entropies) > constants.ENTROPY_INCREASE_BATCH:
+    if encrp_files / len(entropies) > constants.ENTROPHY_INCREASE_BATCH:
         cnt += 1
 
     logger.info(f"Count value after entropy: {cnt}")
