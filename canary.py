@@ -66,9 +66,10 @@ def write_config_file(pdf_paths, docx_paths, pdf_hashes, docx_hashes):
         for i, docx_path in enumerate(docx_paths):
             config_file.write(fr"DOCX_PATH_{i}={docx_path}\n")
         for i, pdf_hash in enumerate(pdf_hashes):
-            config_file.write(fr"PDF_HASH_{i}={pdf_hash}\n")
+            config_file.write(f"PDF_HASH_{i}={pdf_hash}\n")
         for i, docx_hash in enumerate(docx_hashes):
-            config_file.write(fr"DOCX_HASH_{i}={docx_hash}\n")
+            config_file.write(f"DOCX_HASH_{i}={docx_hash}\n")
+
 
 def encrypt_config_file():
     with open("config.txt", "rb") as config_file:
