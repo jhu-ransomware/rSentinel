@@ -220,8 +220,8 @@ def update_arr(connections, num_connections, node_num):
                 code_integrity_status = communication.request_code_integrity_status(sock)
                 CODE_INTEGRITY_CHECK_FLAG = True
 
-                # if not code_integrity_status:
-                #     FAULTY = 1
+                if not code_integrity_status:
+                    FAULTY = 1
 
                 try:
                     sock.close()
