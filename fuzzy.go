@@ -11,6 +11,8 @@ import (
 	"github.com/eciavatta/sdhash"
 )
 
+const defaultPath = `C:\Users\RWareUser\Documents`
+
 func calculateSimilarity(filename1, filename2 string) (int, error) {
 	factoryA, err := sdhash.CreateSdbfFromFilename(filename1)
 	if err != nil {
@@ -28,9 +30,13 @@ func calculateSimilarity(filename1, filename2 string) (int, error) {
 }
 
 func checkFilesInDirectory(directory string) int {
+	// Check if the directory exists
+	if _, err := os.Stat(directory); os.IsNotExist(err) {
+		log.Printf("Error: Directory %s does not exist.\n", directory)
+		os.Exit(1)
+	}
 	dissimilarCount := 0
 	totalFileCount := 0
-
 	// Create a map to store similar file names
 	similarFiles := make(map[string][]string)
 
@@ -39,7 +45,7 @@ func checkFilesInDirectory(directory string) int {
 
 	err := filepath.WalkDir(directory, func(path string, d fs.DirEntry, errWalk error) error {
 		if errWalk != nil {
-			log.Printf("Error accessing %s: %v\n", path, errWalk)
+			// log.Printf("Error accessing %s: %v\n", path, errWalk)
 			return nil
 		}
 		if !d.IsDir() {
@@ -47,7 +53,7 @@ func checkFilesInDirectory(directory string) int {
 			baseName := baseNameRegex.ReplaceAllString(d.Name(), "$1")
 
 			// Log the base name and extension for debugging
-			log.Printf("File: %s, Base Name: %s\n", d.Name(), baseName)
+			// log.Printf("File: %s, Base Name: %s\n", d.Name(), baseName)
 
 			// Add the file to the similarFiles map
 			similarFiles[baseName] = append(similarFiles[baseName], path)
@@ -55,13 +61,13 @@ func checkFilesInDirectory(directory string) int {
 			// Get the file info
 			fileInfo, errFileInfo := d.Info()
 			if errFileInfo != nil {
-				log.Printf("Error getting file info for %s: %v\n", path, errFileInfo)
+				// log.Printf("Error getting file info for %s: %v\n", path, errFileInfo)
 				return nil
 			}
 
 			// Skip files smaller than 20 KB or larger than 200 MB
 			if fileInfo.Size() < 20*1024 || fileInfo.Size() > 200*1024*1024 {
-				log.Printf("Skipping file %s due to size restrictions (size: %d bytes)\n", path, fileInfo.Size())
+				// log.Printf("Skipping file %s due to size restrictions (size: %d bytes)\n", path, fileInfo.Size())
 				return nil
 			}
 		}
@@ -69,7 +75,7 @@ func checkFilesInDirectory(directory string) int {
 	})
 
 	if err != nil {
-		log.Printf("Error walking the directory: %v\n", err)
+		// log.Printf("Error walking the directory: %v\n", err)
 		return -1
 	}
 
@@ -118,7 +124,7 @@ func checkFilesInDirectory(directory string) int {
 		}
 	}
 
-	dissimilarityThreshold := 0.4
+	dissimilarityThreshold := 0.6
 	log.Printf("Dissimilar Count: %d, Total File Count: %d\n", dissimilarCount, totalFileCount)
 	if float64(dissimilarCount)/float64(totalFileCount) >= dissimilarityThreshold {
 		return 1
@@ -127,14 +133,16 @@ func checkFilesInDirectory(directory string) int {
 }
 
 func main() {
-	if len(os.Args) != 2 {
-		log.Println("Usage: go run main.go /path/to/check")
-		return
-	}
+	// Use the default path if no command-line argument is provided
+	directory := defaultPath
 
-	directory := os.Args[1]
+	// Alternatively, you can check if a command-line argument is provided and use it if available
+	// if len(os.Args) == 2 {
+	// 	directory = os.Args[1]
+	// }
+
 	result := checkFilesInDirectory(directory)
 
 	// Print the result instead of using os.Exit
-	fmt.Print(result)
+	fmt.Printf("Result: %d\n", result)
 }
