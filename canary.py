@@ -115,20 +115,20 @@ def validate_files():
     tampered_pdf_count = 0
     for i, pdf_path in enumerate(pdf_paths):
         if pdf_path is None:
-            logging.debug(f"PDF file {i+1} path is missing in the configuration.")
+            logging.debug(f"PDF file {i} path is missing in the configuration.")
             tampered_pdf_count += 1
         else:
             # Optionally, you can use double backslashes for Windows paths
             # pdf_path = pdf_path.replace('/', '\\')  # Uncomment this line if needed
-            logging.debug(f"Checking PDF file {i+1} at path: {pdf_path}")
+            logging.debug(f"Checking PDF file {i} at path: {pdf_path}")
             
             if not os.path.exists(pdf_path):
-                logging.debug(f"PDF file {i+1} does not exist at path: {pdf_path}")
+                logging.debug(f"PDF file {i} does not exist at path: {pdf_path}")
                 tampered_pdf_count += 1
             else:
                 pdf_hash_actual = calculate_sha256(pdf_path)
                 if pdf_hash_actual != pdf_hashes_expected[i]:
-                    logging.debug(f"PDF file {i+1} has been tampered with.")
+                    logging.debug(f"PDF file {i} has been tampered with.")
                     tampered_pdf_count += 1
 
     docx_paths = [config_dict.get(f"DOCX_PATH_{i}") for i in range(6)]  # Assuming 6 DOCX files
@@ -137,24 +137,25 @@ def validate_files():
     tampered_docx_count = 0
     for i, docx_path in enumerate(docx_paths):
         if docx_path is None:
-            logging.debug(f"DOCX file {i+1} path is missing in the configuration.")
+            logging.debug(f"DOCX file {i} path is missing in the configuration.")
             tampered_docx_count += 1
         else:
             # Optionally, you can use double backslashes for Windows paths
             # docx_path = docx_path.replace('/', '\\')  # Uncomment this line if needed
-            logging.debug(f"Checking DOCX file {i+1} at path: {docx_path}")
+            logging.debug(f"Checking DOCX file {i} at path: {docx_path}")
             
             if not os.path.exists(docx_path):
-                logging.debug(f"DOCX file {i+1} does not exist at path: {docx_path}")
+                logging.debug(f"DOCX file {i} does not exist at path: {docx_path}")
                 tampered_docx_count += 1
             else:
                 docx_hash_actual = calculate_sha256(docx_path)
                 if docx_hash_actual != docx_hashes_expected[i]:
-                    logging.debug(f"DOCX file {i+1} has been tampered with.")
+                    logging.debug(f"DOCX file {i} has been tampered with.")
                     tampered_docx_count += 1
 
     total_tampered_count = tampered_pdf_count + tampered_docx_count
     return total_tampered_count > 5
+
 
 
 def execute_canary_logic():
