@@ -79,6 +79,7 @@ def verify_signature(data, signature):
             ),
             hashes.SHA256()
         )
+        logger.info(f"Verification Succeeded")
         return True
     except Exception as e:
         logger.error(f"Verification failed: {e}")
