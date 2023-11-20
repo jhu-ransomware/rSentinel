@@ -90,14 +90,14 @@ def decrypt_config_file():
 
     with open("config.txt", "rb") as config_file:  # Open in binary mode
         data = config_file.read()
-        iv = data[:16]
-        ciphertext = data[16:]
+        # Split the data into iv and ciphertext, taking into account different line endings
+        iv, ciphertext = data.split(b'\r\n') if b'\r\n' in data else data.split(b'\n')
 
     cipher = AES.new(key, AES.MODE_CBC, iv)
     decrypted_data = unpad(cipher.decrypt(ciphertext), AES.block_size)
     config_str = decrypted_data.decode("utf-8")
     config_lines = config_str.split("\n")
-    logging.info(f"The contents of the config fiel are: \n {config_str}")
+    logging.info(f"The contents of the config file are: \n {config_str}")
     config_dict = {}
     for line in config_lines:
         if "=" in line:
@@ -105,6 +105,7 @@ def decrypt_config_file():
             config_dict[key] = value
 
     return config_dict
+
 
 
 def validate_files():
