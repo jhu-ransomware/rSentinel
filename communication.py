@@ -181,7 +181,6 @@ def request_code_integrity_status(sock):
         logger.debug(f"Code integrity message request sent successfully")
 
         signed_signature = sock.recv(1024)  # Assuming 4 bytes for an integer, as it is in C
-        logger.critical(f"{current_function_name} - received combined hash - {signed_signature}")
 
         code_integrity_verified = code_integrity_check.verify_signature(combined_hash, signed_signature)
         

@@ -107,7 +107,7 @@ def adaptive_dsd(faulty, connections, num_connections, node_num, lookup):
             else:
                 print("Invalid input. Enter 1 or 0 to change fault status, or 2 to diagnose.")
                 
-        if curr_time > constants.TESTING_INTERVAL:
+        if curr_time > constants.TESTING_INTERVAL and not FAULTY:
             logger.info(f"{current_function_name} - Starting the testing now after {constants.TESTING_INTERVAL} seconds. Tested up array - {tested_up}")
             update_arr(connections, num_connections, node_num)
                 
@@ -174,7 +174,7 @@ def receiving(server_fd):
                     msg_type = communication.receive_msg(s)
                     if msg_type == constants.TEST_MSG:
                         try:
-                            logger.error(f"{current_function_name} - Sending fault status - {FAULTY}")
+                            logger.info(f"{current_function_name} - Sending fault status - {FAULTY}")
                             communication.send_fault_status(s, FAULTY)
                             logger.debug(f"{current_function_name} - Message Type - TEST_MSG - sent fault status successfully")
                         except Exception as e:
