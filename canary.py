@@ -118,17 +118,17 @@ def validate_files():
             logging.debug(f"PDF file {i} path is missing or empty in the configuration.")
             tampered_pdf_count += 1
         else:
-            # Optionally, you can use double backslashes for Windows paths
-            # pdf_path = pdf_path.replace('/', '\\')  # Uncomment this line if needed
             logging.debug(f"Checking PDF file {i} at path: {pdf_path}")
-            
-            print(f"Actual path {i}: '{pdf_path}'")  # Add this line to print the actual path
-            
+            print(f"Actual path {i}: '{pdf_path}'")
+
             if not os.path.exists(pdf_path):
                 logging.debug(f"PDF file {i} does not exist at path: {pdf_path}")
                 tampered_pdf_count += 1
             else:
                 pdf_hash_actual = calculate_sha256(pdf_path)
+                logging.debug(f"Calculated PDF hash for file {i}: {pdf_hash_actual}")
+                logging.debug(f"Expected PDF hash for file {i}: {pdf_hashes_expected[i]}")
+
                 if pdf_hash_actual != pdf_hashes_expected[i]:
                     logging.debug(f"PDF file {i} has been tampered with.")
                     tampered_pdf_count += 1
@@ -142,23 +142,24 @@ def validate_files():
             logging.debug(f"DOCX file {i} path is missing or empty in the configuration.")
             tampered_docx_count += 1
         else:
-            # Optionally, you can use double backslashes for Windows paths
-            # docx_path = docx_path.replace('/', '\\')  # Uncomment this line if needed
             logging.debug(f"Checking DOCX file {i} at path: {docx_path}")
-            
-            print(f"Actual path {i}: '{docx_path}'")  # Add this line to print the actual path
-            
+            print(f"Actual path {i}: '{docx_path}'")
+
             if not os.path.exists(docx_path):
                 logging.debug(f"DOCX file {i} does not exist at path: {docx_path}")
                 tampered_docx_count += 1
             else:
                 docx_hash_actual = calculate_sha256(docx_path)
+                logging.debug(f"Calculated DOCX hash for file {i}: {docx_hash_actual}")
+                logging.debug(f"Expected DOCX hash for file {i}: {docx_hashes_expected[i]}")
+
                 if docx_hash_actual != docx_hashes_expected[i]:
                     logging.debug(f"DOCX file {i} has been tampered with.")
                     tampered_docx_count += 1
 
     total_tampered_count = tampered_pdf_count + tampered_docx_count
     return total_tampered_count > 5
+
 
 
 
