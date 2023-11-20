@@ -53,8 +53,9 @@ def update_entropy(entropies):
         entr = entropy.calc_entropy_file(curr['filename'])
         if entr == -1:
             encrp_files += 1
-        elif (entr - curr['entropy']) / curr['entropy'] > constants.ENTROPY_INCREASE_FILE:
+        elif (entr - curr['entropy']) / curr['entropy'] > constants.ENTROPHY_INCREASE_FILE:
             encrp_files += 1
         curr['entropy'] = entr
 
     return encrp_files
+
