@@ -109,13 +109,13 @@ def decrypt_config_file():
 
 def validate_files():
     config_dict = decrypt_config_file()
-    pdf_paths = [config_dict.get(f"PDF_PATH_{i}") for i in range(4)]  # Assuming 4 PDF files
+    pdf_paths = [config_dict.get(f"PDF_PATH_{i}", "").strip() for i in range(4)]  # Assuming 4 PDF files
     pdf_hashes_expected = [config_dict.get(f"PDF_HASH_{i}") for i in range(4)]
     
     tampered_pdf_count = 0
     for i, pdf_path in enumerate(pdf_paths):
-        if pdf_path is None:
-            logging.debug(f"PDF file {i} path is missing in the configuration.")
+        if not pdf_path:
+            logging.debug(f"PDF file {i} path is missing or empty in the configuration.")
             tampered_pdf_count += 1
         else:
             # Optionally, you can use double backslashes for Windows paths
@@ -131,13 +131,13 @@ def validate_files():
                     logging.debug(f"PDF file {i} has been tampered with.")
                     tampered_pdf_count += 1
 
-    docx_paths = [config_dict.get(f"DOCX_PATH_{i}") for i in range(6)]  # Assuming 6 DOCX files
+    docx_paths = [config_dict.get(f"DOCX_PATH_{i}", "").strip() for i in range(6)]  # Assuming 6 DOCX files
     docx_hashes_expected = [config_dict.get(f"DOCX_HASH_{i}") for i in range(6)]
 
     tampered_docx_count = 0
     for i, docx_path in enumerate(docx_paths):
-        if docx_path is None:
-            logging.debug(f"DOCX file {i} path is missing in the configuration.")
+        if not docx_path:
+            logging.debug(f"DOCX file {i} path is missing or empty in the configuration.")
             tampered_docx_count += 1
         else:
             # Optionally, you can use double backslashes for Windows paths
@@ -155,6 +155,7 @@ def validate_files():
 
     total_tampered_count = tampered_pdf_count + tampered_docx_count
     return total_tampered_count > 5
+
 
 
 
