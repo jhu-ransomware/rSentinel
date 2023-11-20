@@ -14,7 +14,7 @@ from reportlab.lib.styles import getSampleStyleSheet
 
 
 # Configure logging
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 def generate_random_filename():
     return ''.join(random.choices('abcdefghijklmnopqrstuvwxyz', k=8))
