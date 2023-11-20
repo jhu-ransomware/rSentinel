@@ -113,7 +113,7 @@ def adaptive_dsd(faulty, connections, num_connections, node_num, lookup):
             else:
                 print("Invalid input. Enter 1 or 0 to change fault status, or 2 to diagnose.")
                 
-        if curr_time > constants.TESTING_INTERVAL:
+        if curr_time > constants.TESTING_INTERVAL * 2:
             logging.debug(f"{current_function_name} - Starting the testing now after {constants.TESTING_INTERVAL} seconds")
             logging.info(f"{current_function_name} - Tested up array at testing interval - {tested_up}")
             update_arr(connections, num_connections, node_num)
