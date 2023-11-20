@@ -165,7 +165,7 @@ def execute_canary_logic():
 
         docx_paths = [
             os.path.join(
-                generate_random_location(["C:\\Users\\Username\\Downloads", "C:\\Users\\Username\\Desktop", "C:\\Users\\Username\\Documents"]),
+                generate_random_location(["C:\\Users\\RWareUser\\Downloads", "C:\\Users\\RWareUser\\Desktop", "C:\\Users\\RWareUser\\Documents"]),
                 docx_filename.format(i)
             ) for i in range(6)  # Assuming 6 DOCX files
         ]
