@@ -104,7 +104,7 @@ def decrypt_config_file():
     config_dict = {}
     for line in config_lines:
         if "=" in line:
-            key, value = line.split("=", 1)  # Split only once
+            key, value = line.split("=")
             config_dict[key] = value
 
     return config_dict
@@ -120,7 +120,8 @@ def validate_files():
             logging.debug(f"PDF file {i+1} path is missing in the configuration.")
             tampered_pdf_count += 1
         else:
-            pdf_path = os.path.normpath(pdf_path)  # Normalize the path
+            # Optionally, you can use double backslashes for Windows paths
+            # pdf_path = pdf_path.replace('/', '\\')  # Uncomment this line if needed
             logging.debug(f"Checking PDF file {i+1} at path: {pdf_path}")
             
             if not os.path.exists(pdf_path):
@@ -141,7 +142,8 @@ def validate_files():
             logging.debug(f"DOCX file {i+1} path is missing in the configuration.")
             tampered_docx_count += 1
         else:
-            docx_path = os.path.normpath(docx_path)  # Normalize the path
+            # Optionally, you can use double backslashes for Windows paths
+            # docx_path = docx_path.replace('/', '\\')  # Uncomment this line if needed
             logging.debug(f"Checking DOCX file {i+1} at path: {docx_path}")
             
             if not os.path.exists(docx_path):
@@ -155,6 +157,7 @@ def validate_files():
 
     total_tampered_count = tampered_pdf_count + tampered_docx_count
     return total_tampered_count > 5
+
 
 def execute_canary_logic():
     # Check if config.txt and keys.txt exist
