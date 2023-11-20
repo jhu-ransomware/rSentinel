@@ -24,11 +24,11 @@ def run_detection(entropies):
     # if ftc.check_magic_numbers():
     #     cnt += 1
 
-    logging.info(f"Currently executing: Canary File Check")
-    result_canary = canary.execute_canary_logic()
-    if result_canary:
-        cnt += 1
-    logging.info(f"Count value after canary: {cnt}")
+    # logging.info(f"Currently executing: Canary File Check")
+    # result_canary = canary.execute_canary_logic()
+    # if result_canary:
+    #     cnt += 1
+    # logging.info(f"Count value after canary: {cnt}")
   
     logging.info(f"Currently executing: Fuzzy Hashing")
     result_fuzzy = fuzzysd.run_go_script()
