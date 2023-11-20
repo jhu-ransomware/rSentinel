@@ -89,21 +89,26 @@ def decrypt_config_file():
         key = base64.b64decode(encoded_key.encode("utf-8"))  # Decode the Base64-encoded key
         logging.info(f"Decoded Key: {key}")
 
-    with open("config.txt", "r", encoding="utf-8") as config_file:
-        config_str = config_file.read()
-        logging.info(f"The string is: {config_str}")
+    with open("config.txt", "rb") as config_file:  # Open in binary mode
+        data = config_file.read()
+        iv = data[:16]
+        ciphertext = data[16:]
+        logging.info(f"IV: {iv}")
+        logging.info(f"Ciphertext: {ciphertext}")
 
-    # Split the string into lines, handling both '\n' and '\r\n'
-    config_lines = config_str.replace('\r\n', '\n').split('\n')
-
+    cipher = AES.new(key, AES.MODE_CBC, iv)
+    decrypted_data = unpad(cipher.decrypt(ciphertext), AES.block_size)
+    config_str = decrypted_data.decode("utf-8")
+    config_lines = config_str.split("\n")
+    logging.info(f"The string is : {config_str}")
     config_dict = {}
     for line in config_lines:
         if "=" in line:
-            # Split the line at the first equals sign to handle multiple equals signs in the value
-            key, value = line.split("=", 1)
-            config_dict[key.strip()] = value.strip()
+            key, value = line.split("=")
+            config_dict[key] = value
 
     return config_dict
+
 
 def validate_files():
     config_dict = decrypt_config_file()
