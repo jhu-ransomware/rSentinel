@@ -100,12 +100,13 @@ def decrypt_config_file():
     decrypted_data = unpad(cipher.decrypt(ciphertext), AES.block_size)
     config_str = decrypted_data.decode("utf-8")
     config_lines = config_str.split("\n")
-    logging.info(f"The string is : {config_str}")
+    logging.info(f"The string is: {config_str}")
     config_dict = {}
     for line in config_lines:
         if "=" in line:
-            key, value = line.split("=")
-            config_dict[key] = value
+            # Split the line at the first equals sign to handle multiple equals signs in the value
+            key, value = line.split("=", 1)
+            config_dict[key.strip()] = value.strip()
 
     return config_dict
 
