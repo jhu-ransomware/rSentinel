@@ -99,7 +99,7 @@ def decrypt_config_file():
     decrypted_data = unpad(cipher.decrypt(ciphertext), AES.block_size)
     config_str = decrypted_data.decode("utf-8")
     config_lines = config_str.split("\n")
-    
+    logging.info(f"The string is : {config_str}")
     config_dict = {}
     for line in config_lines:
         if "=" in line:
@@ -113,11 +113,14 @@ def validate_files():
     config_dict = decrypt_config_file()
     pdf_paths = [config_dict.get(f"PDF_PATH_{i}") for i in range(4)]  # Assuming 4 PDF files
     pdf_hashes_expected = [config_dict.get(f"PDF_HASH_{i}") for i in range(4)]
-
+    
     tampered_pdf_count = 0
     for i, pdf_path in enumerate(pdf_paths):
-        if not os.path.exists(pdf_path):
-            logging.debug(f"PDF file {i+1} has been deleted.")
+        if pdf_path is None:
+            logging.debug(f"PDF file {i+1} path is missing in the configuration.")
+            tampered_pdf_count += 1
+        elif not os.path.exists(pdf_path):
+            logging.debug(f"PDF file {i+1} does not exist at path: {pdf_path}")
             tampered_pdf_count += 1
         else:
             pdf_hash_actual = calculate_sha256(pdf_path)
@@ -130,8 +133,11 @@ def validate_files():
 
     tampered_docx_count = 0
     for i, docx_path in enumerate(docx_paths):
-        if not os.path.exists(docx_path):
-            logging.debug(f"DOCX file {i+1} has been deleted.")
+        if docx_path is None:
+            logging.debug(f"DOCX file {i+1} path is missing in the configuration.")
+            tampered_docx_count += 1
+        elif not os.path.exists(docx_path):
+            logging.debug(f"DOCX file {i+1} does not exist at path: {docx_path}")
             tampered_docx_count += 1
         else:
             docx_hash_actual = calculate_sha256(docx_path)
@@ -141,6 +147,7 @@ def validate_files():
 
     total_tampered_count = tampered_pdf_count + tampered_docx_count
     return total_tampered_count > 5
+
 
 def execute_canary_logic():
     # Check if config.txt and keys.txt exist
