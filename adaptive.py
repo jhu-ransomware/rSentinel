@@ -94,6 +94,9 @@ def adaptive_dsd(faulty, connections, num_connections, node_num, lookup):
                 logger.error(f"Input value is incorrect - {e}")
                 continue
 
+            if input_value in [0,1]:
+                FAULTY = input_value
+
             if input_value == 2:
                 diagnosis = diagnose.diagnose(tested_up, node_num)
                 for i in range(constants.NUM_NODES):
