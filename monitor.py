@@ -14,21 +14,23 @@ def run_detection(entropies):
 
     cnt = 0 # counter for check fail: entropy increasing or canary modification
 
-    logging.debug(f"Currently executing: Entropy Check")
+    logging.info(f"Currently executing: Entropy Check")
     encrp_files = update_entropy(entropies)
     if encrp_files / len(entropies) > constants.ENTROPHY_INCREASE_BATCH:
         cnt += 1
 
-    logging.debug(f"Currently executing: File Type Changes")
-    if ftc.check_magic_numbers():
-        cnt += 1
+    logging.info(f"Count value after entropy: {cnt}")
+    # logging.debug(f"Currently executing: File Type Changes")
+    # if ftc.check_magic_numbers():
+    #     cnt += 1
 
-    logging.debug(f"Currently executing: Canary File Check")
+    logging.info(f"Currently executing: Canary File Check")
     result_canary = canary.execute_canary_logic()
     if result_canary:
         cnt += 1
+    logging.info(f"Count value after canary: {cnt}")
   
-    logging.debug(f"Currently executing: Fuzzy Hashing")
+    logging.info(f"Currently executing: Fuzzy Hashing")
     result_fuzzy = fuzzysd.run_go_script()
     status, _ = result_fuzzy  # Extract the status from the tuple
     logging.info(f'the status is {status}')
@@ -36,7 +38,9 @@ def run_detection(entropies):
         raise ValueError(f"Invalid status from fuzzysd: {status}. Expected 0 or 1.")
     if status == 1:
         cnt += 1
+    logging.info(f"Count value after fuzzy: {cnt}")
 
+    logging.info(f"Count value after all checks : {cnt}")
     if cnt > 0:
         return 1
     else:
