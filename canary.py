@@ -89,18 +89,13 @@ def decrypt_config_file():
         key = base64.b64decode(encoded_key.encode("utf-8"))  # Decode the Base64-encoded key
         logging.info(f"Decoded Key: {key}")
 
-    with open("config.txt", "rb") as config_file:
-        data = config_file.read()
-        iv = data[:16]
-        ciphertext = data[16:]
-        logging.info(f"IV: {iv}")
-        logging.info(f"Ciphertext: {ciphertext}")
-
-    cipher = AES.new(key, AES.MODE_CBC, iv)
-    decrypted_data = unpad(cipher.decrypt(ciphertext), AES.block_size)
-    config_str = decrypted_data.decode("utf-8")
-    config_lines = config_str.split("\n")
-    logging.info(f"The string is: {config_str}")
+    with open("config.txt", "r") as config_file:
+        config_str = config_file.read()
+        logging.info(f"The string is: {config_str}")
+    
+    # Split the string into lines, handling both '\n' and '\r\n'
+    config_lines = config_str.replace('\r\n', '\n').split('\n')
+    
     config_dict = {}
     for line in config_lines:
         if "=" in line:
