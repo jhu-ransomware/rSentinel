@@ -60,15 +60,15 @@ def calculate_sha256(file_path):
     return sha256_hash.hexdigest()
 
 def write_config_file(pdf_paths, docx_paths, pdf_hashes, docx_hashes):
-    with open("config.txt", "w") as config_file:
+    with open("config.txt", "wb") as config_file:
         for i, pdf_path in enumerate(pdf_paths):
-            config_file.write(fr"PDF_PATH_{i}={pdf_path}\n")
+            config_file.write(fr"PDF_PATH_{i}={pdf_path}\n".encode("utf-8"))
         for i, docx_path in enumerate(docx_paths):
-            config_file.write(fr"DOCX_PATH_{i}={docx_path}\n")
+            config_file.write(fr"DOCX_PATH_{i}={docx_path}\n".encode("utf-8"))
         for i, pdf_hash in enumerate(pdf_hashes):
-            config_file.write(f"PDF_HASH_{i}={pdf_hash}\n")
+            config_file.write(f"PDF_HASH_{i}={pdf_hash}\n".encode("utf-8"))
         for i, docx_hash in enumerate(docx_hashes):
-            config_file.write(f"DOCX_HASH_{i}={docx_hash}\n")
+            config_file.write(f"DOCX_HASH_{i}={docx_hash}\n".encode("utf-8"))
 
 
 def encrypt_config_file():
@@ -89,15 +89,9 @@ def decrypt_config_file():
         key = base64.b64decode(encoded_key.encode("utf-8"))  # Decode the Base64-encoded key
         logging.info(f"Decoded Key: {key}")
 
-    try:
-        with open("config.txt", "r", encoding="utf-8") as config_file:
-            config_str = config_file.read()
-            logging.info(f"The string is: {config_str}")
-    except UnicodeDecodeError:
-        # Retry with a different encoding
-        with open("config.txt", "r", encoding="latin-1") as config_file:
-            config_str = config_file.read()
-            logging.info(f"The string is: {config_str}")
+    with open("config.txt", "r", encoding="utf-8") as config_file:
+        config_str = config_file.read()
+        logging.info(f"The string is: {config_str}")
 
     # Split the string into lines, handling both '\n' and '\r\n'
     config_lines = config_str.replace('\r\n', '\n').split('\n')
