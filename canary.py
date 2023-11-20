@@ -90,8 +90,11 @@ def decrypt_config_file():
 
     with open("config.txt", "rb") as config_file:  # Open in binary mode
         data = config_file.read()
-        # Split the data into iv and ciphertext, taking into account different line endings
-        iv, ciphertext = data.split(b'\r\n') if b'\r\n' in data else data.split(b'\n')
+        # Find the index of the first occurrence of '\r\n' or '\n'
+        index = data.find(b'\r\n') if b'\r\n' in data else data.find(b'\n')
+        # Split the data into iv and ciphertext based on the index
+        iv = data[:16]
+        ciphertext = data[16:]
 
     cipher = AES.new(key, AES.MODE_CBC, iv)
     decrypted_data = unpad(cipher.decrypt(ciphertext), AES.block_size)
@@ -105,6 +108,7 @@ def decrypt_config_file():
             config_dict[key] = value
 
     return config_dict
+
 
 
 
@@ -130,7 +134,7 @@ def validate_files():
                 logging.debug(f"Calculated PDF hash for file {i}: {pdf_hash_actual}")
                 logging.debug(f"Expected PDF hash for file {i}: {pdf_hashes_expected[i]}")
 
-                if pdf_hash_actual != pdf_hashes_expected[i]:
+                if pdf_hash_actual.strip() != pdf_hashes_expected[i].strip():
                     logging.debug(f"PDF file {i} has been tampered with.")
                     tampered_pdf_count += 1
 
@@ -154,7 +158,7 @@ def validate_files():
                 logging.debug(f"Calculated DOCX hash for file {i}: {docx_hash_actual}")
                 logging.debug(f"Expected DOCX hash for file {i}: {docx_hashes_expected[i]}")
 
-                if docx_hash_actual != docx_hashes_expected[i]:
+                if docx_hash_actual.strip() != docx_hashes_expected[i].strip():
                     logging.debug(f"DOCX file {i} has been tampered with.")
                     tampered_docx_count += 1
 
