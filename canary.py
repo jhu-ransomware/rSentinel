@@ -141,7 +141,7 @@ def execute_canary_logic():
         # Step 6: Decryption and Validation
         result = validate_files()
 
-        if not result:
+        if result:
             logging.debug("More than 5 files have been modified or tampered with.")
             return 1
         else:
