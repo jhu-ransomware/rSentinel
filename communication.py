@@ -175,6 +175,7 @@ def request_code_integrity_status(sock):
 
     try:
         combined_hash = code_integrity_check.generate_combined_hash()
+        logger.info(f"{current_function_name} - Generated combined hash - {combined_hash}")
         test_msg_data = struct.pack('!I', constants.CODE_INTEGRITY_MSG)  # Pack the TEST_MSG as a 4-byte integer
         sock.send(test_msg_data)
         logger.debug(f"Code integrity message request sent successfully")
@@ -197,6 +198,7 @@ def send_code_integrity_signature(sock):
     
     try:
         combined_hash = os.getenv(constants.COMBINED_HASH_VARIABLE, constants.ENV_VAR_DEFAULT_VALUE)
+        logger.info(f"{current_function_name} - Stored combined hash - {combined_hash}")
         signed_hash = code_integrity_check.sign_data(combined_hash)
         sock.sendall(signed_hash)
         logger.debug(f"Code integrity message sent successfully")
