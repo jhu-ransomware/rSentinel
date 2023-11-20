@@ -158,7 +158,7 @@ def execute_canary_logic():
         # Specify the full path for file generation
         pdf_paths = [
             os.path.join(
-                generate_random_location(["C:\\Users\\Username\\Downloads", "C:\\Users\\Username\\Desktop", "C:\\Users\\Username\\Documents"]),
+                generate_random_location(["C:\\Users\\RWareUser\\Downloads", "C:\\Users\\RWareUser\\Desktop", "C:\\Users\\RWareUser\\Documents"]),
                 pdf_filename
             ) for pdf_filename in pdf_filenames
         ]
