@@ -104,7 +104,7 @@ def decrypt_config_file():
     config_dict = {}
     for line in config_lines:
         if "=" in line:
-            key, value = line.split("=")
+            key, value = line.split("=", 1)  # Split only once
             config_dict[key] = value
 
     return config_dict
