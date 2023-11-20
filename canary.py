@@ -111,7 +111,7 @@ def validate_files():
     config_dict = decrypt_config_file()
     pdf_paths = [config_dict.get(f"PDF_PATH_{i}", "").strip() for i in range(4)]  # Assuming 4 PDF files
     pdf_hashes_expected = [config_dict.get(f"PDF_HASH_{i}") for i in range(4)]
-    
+
     tampered_pdf_count = 0
     for i, pdf_path in enumerate(pdf_paths):
         if not pdf_path:
@@ -121,6 +121,8 @@ def validate_files():
             # Optionally, you can use double backslashes for Windows paths
             # pdf_path = pdf_path.replace('/', '\\')  # Uncomment this line if needed
             logging.debug(f"Checking PDF file {i} at path: {pdf_path}")
+            
+            print(f"Actual path {i}: '{pdf_path}'")  # Add this line to print the actual path
             
             if not os.path.exists(pdf_path):
                 logging.debug(f"PDF file {i} does not exist at path: {pdf_path}")
@@ -143,6 +145,8 @@ def validate_files():
             # Optionally, you can use double backslashes for Windows paths
             # docx_path = docx_path.replace('/', '\\')  # Uncomment this line if needed
             logging.debug(f"Checking DOCX file {i} at path: {docx_path}")
+            
+            print(f"Actual path {i}: '{docx_path}'")  # Add this line to print the actual path
             
             if not os.path.exists(docx_path):
                 logging.debug(f"DOCX file {i} does not exist at path: {docx_path}")
