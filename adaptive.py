@@ -32,11 +32,11 @@ def start_algo(faulty, connections, num_connections, node_num):
     FAULTY = faulty
     tested_up = [-1] * constants.NUM_NODES
 
-    # Check if the './test' directory exists
-    test_directory = "./test"
-    if not os.path.exists(test_directory):
-        logger.error(f"{current_function_name} - The '{test_directory}' directory does not exist.")
-        return
+    # # Check if the './test' directory exists
+    # test_directory = "./test"
+    # if not os.path.exists(test_directory):
+    #     logger.error(f"{current_function_name} - The '{test_directory}' directory does not exist.")
+    #     return
 
     server_fd = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -47,21 +47,21 @@ def start_algo(faulty, connections, num_connections, node_num):
     # Start the thread
     threading.Thread(target=receive_thread, args=(server_fd,)).start()
 
-    # Build the initial lookup table
-    files = [f for f in os.listdir(test_directory) if os.path.isfile(os.path.join(test_directory, f))]
-    files = [f for f in files if f not in ['.', '..']]
-    file_count = len(files)
+    # # Build the initial lookup table
+    # files = [f for f in os.listdir(test_directory) if os.path.isfile(os.path.join(test_directory, f))]
+    # files = [f for f in files if f not in ['.', '..']]
+    # file_count = len(files)
 
-    if file_count == 0:
-        logger.warning(f"{current_function_name} - There are no files in the '{test_directory}' directory.")
+    # if file_count == 0:
+    #     logger.warning(f"{current_function_name} - There are no files in the '{test_directory}' directory.")
 
-    logger.debug(f"File count in '{test_directory}' directory: {file_count}")
+    # logger.debug(f"File count in '{test_directory}' directory: {file_count}")
 
-    file_lookup = []
-    for file in files:
-        temp_filename = os.path.join(test_directory, file)
-        entrophy = entropy.calc_entropy_file(temp_filename)
-        file_lookup.append({'filename': temp_filename, 'entropy': entrophy})
+    # file_lookup = []
+    # for file in files:
+    #     temp_filename = os.path.join(test_directory, file)
+    #     entrophy = entropy.calc_entropy_file(temp_filename)
+    #     file_lookup.append({'filename': temp_filename, 'entropy': entrophy})
 
     # Wait for user input to begin testing
     ready = 0
@@ -114,7 +114,7 @@ def adaptive_dsd(faulty, connections, num_connections, node_num, lookup):
             logger.info(f"{current_function_name} - Starting the testing now after {constants.TESTING_INTERVAL} seconds. Tested up array - {tested_up}")
             update_arr(connections, num_connections, node_num)
                 
-            detection_status = monitor.run_detection(lookup)
+            detection_status = monitor.run_detection()
             logger.info(f"{current_function_name} - Detection status - {detection_status}")
             # update lookup table
             if not FAULTY and detection_status:

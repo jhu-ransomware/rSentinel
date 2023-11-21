@@ -88,7 +88,7 @@ def calculate_entropy_for_files_in_directory(directory):
 
 def main():
     user_directory = "/home/matrix/Downloads"
-    calculate_entropy_for_files_in_directory(user_directory)
+    return calculate_entropy_for_files_in_directory(user_directory)
 
 if __name__ == "__main__":
     main()
