@@ -12,36 +12,41 @@ def run_detection(entropies):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
     logger.debug(f"Currently executing: {current_function_name}")
 
-    cnt = 0 # counter for check fail: entropy increasing or canary modification
+    cnt = 0  # counter for check fail: entropy increasing or canary modification
 
-    logger.debug(f"Currently executing: Entropy Check")
+    logger.info(f"Currently executing: Entropy Check")
     encrp_files = update_entropy(entropies)
     if encrp_files / len(entropies) > constants.ENTROPHY_INCREASE_BATCH:
         cnt += 1
-
-    logger.debug(f"Currently executing: Canary File Check")
-    ori_digest = canary.createCanary()
-    if canary.chkCanaryChange(canary.canary_file, ori_digest):
-        cnt += 1
     
-    logger.debug(f"Currently executing: File Type Changes")
-    if ftc.check_magic_numbers():
-        cnt += 1
-    # logger.debug(f"Currently executing: Fuzzy Hashing")
-    # result_fuzzy = fuzzysd.run_go_script("/c/cygwin/cgdrive/Users/")
-    # if not isinstance(result_fuzzy, int) or result_fuzzy not in [0, 1]:
-    #     raise ValueError(f"Invalid result: {result_fuzzy}. Expected 0 or 1.")
-    # if result_fuzzy:
+    logger.info(f"Count value after entropy: {cnt}")
+
+    # logger.debug(f"Currently executing: File Type Changes")
+    # if ftc.check_magic_numbers():
     #     cnt += 1
-    
 
+    logger.info(f"Currently executing: Canary File Check")
+    result_canary = canary.execute_canary_logic()
+    if result_canary:
+        cnt += 1
+    logger.info(f"Count value after canary: {cnt}")
+
+    logger.info(f"Currently executing: Fuzzy Hashing")
+    result_fuzzy = fuzzysd.run_go_script()
+    status, _ = result_fuzzy  # Extract the status from the tuple
+    logger.info(f'The status is {status}')
+    if not isinstance(status, int) or status not in [0, 1]:
+        raise ValueError(f"Invalid status from fuzzysd: {status}. Expected 0 or 1.")
+    if status == 1:
+        cnt += 1
+    logger.info(f"Count value after fuzzy: {cnt}")
+
+    logger.info(f"Count value after all checks: {cnt}")
     if cnt > 0:
         logger.error(f"{current_function_name} = Node is faulty")
         return 1
     else:
         return 0
-    
-    
 
 def update_entropy(entropies):
     encrp_files = 0
@@ -54,3 +59,4 @@ def update_entropy(entropies):
         curr['entropy'] = entr
 
     return encrp_files
+
