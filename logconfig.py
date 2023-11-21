@@ -8,20 +8,21 @@ class CustomFormatter(logging.Formatter):
 
     RED = Fore.RED
     RESET = Style.RESET_ALL
-    FORMAT = "%(levelname)s: %(message)s"
+    FORMAT = "%(asctime)s - %(levelname)s: %(message)s"
 
     FORMATS = {
         logging.DEBUG: RESET + FORMAT,
         logging.INFO: RESET + FORMAT,
         logging.WARNING: RESET + FORMAT,
-        logging.ERROR: RED + FORMAT,
-        logging.CRITICAL: RED + FORMAT
+        logging.ERROR: RED + FORMAT + RESET,
+        logging.CRITICAL: RED + FORMAT + RESET
     }
 
     def format(self, record):
         log_fmt = self.FORMATS.get(record.levelno)
-        formatter = logging.Formatter(log_fmt)
-        return formatter.format(record)
+        formatter = logging.Formatter(log_fmt, "%Y-%m-%d %H:%M:%S")
+        formatted_record = formatter.format(record)
+        return formatted_record + self.RESET
 
 def get_logger(name):
     logger = logging.getLogger(name)

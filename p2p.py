@@ -21,10 +21,20 @@ _______/   _____/ ____   _____/  |_|__| ____   ____ |  |
  |__| /_______  /\___  >___|  /__| |__|___|  /\___  >____/
               \/     \/     \/             \/     \/      
 """
+tagline_art = """
+  ___  _    _       _ _         _          _   ___                                             ___       __                 
+ |   \(_)__| |_ _ _(_) |__ _  _| |_ ___ __| | | _ \__ _ _ _  ______ _ ____ __ ____ _ _ _ ___  |   \ ___ / _|___ _ _  __ ___ 
+ | |) | (_-<  _| '_| | '_ \ || |  _/ -_) _` | |   / _` | ' \(_-< _ \ '  \ V  V / _` | '_/ -_) | |) / -_)  _/ -_) ' \/ _/ -_)
+ |___/|_/__/\__|_| |_|_.__/\_,_|\__\___\__,_| |_|_\__,_|_||_/__|___/_|_|_\_/\_/\__,_|_| \___| |___/\___|_| \___|_||_\__\___|
+                                                                                                                            
+"""
+
+tagline_art1 = "Distributed Ransomware Defence"
 
 def main():
-    logger.info(Fore.GREEN + rSentinel_art)
-    logger.info(Fore.RESET + "rSentinel is now monitoring your system for ransomware activity")
+    print(Fore.GREEN + rSentinel_art + Fore.RESET)
+    print(Fore.GREEN + tagline_art + Fore.RESET)
+    logger.info(Fore.RESET + "Starting rSentinel - A distributed ransomware defence system")
     this_node = None
     fault_status = None
 
