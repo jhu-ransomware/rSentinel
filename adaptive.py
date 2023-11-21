@@ -68,10 +68,10 @@ def start_algo(faulty, connections, num_connections, node_num):
     while not ready:
         ready = int(input("Enter 1 to begin testing other nodes: "))
     
-    threading.Thread(target=adaptive_dsd, args=(faulty, connections, num_connections, node_num, file_lookup)).start()
+    threading.Thread(target=adaptive_dsd, args=(faulty, connections, num_connections, node_num)).start()
 
 
-def adaptive_dsd(faulty, connections, num_connections, node_num, lookup):
+def adaptive_dsd(faulty, connections, num_connections, node_num):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
     logger.debug(f"Currently executing: {current_function_name}")
 
