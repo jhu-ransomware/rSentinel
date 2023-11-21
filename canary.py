@@ -1,7 +1,7 @@
 import os
 import random
 import hashlib
-import logging
+from logconfig import get_logger
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad, unpad
 from Crypto.Random import get_random_bytes
@@ -12,9 +12,8 @@ import string
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
 
+logger = get_logger(__name__)
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
 
 def generate_random_filename():
     return ''.join(random.choices('abcdefghijklmnopqrstuvwxyz', k=8))
@@ -100,7 +99,7 @@ def decrypt_config_file():
     decrypted_data = unpad(cipher.decrypt(ciphertext), AES.block_size)
     config_str = decrypted_data.decode("utf-8")
     config_lines = config_str.split("\n")
-    logging.info(f"The contents of the config file are: \n {config_str}")
+    logger.info(f"The contents of the config file are: \n {config_str}")
     config_dict = {}
     for line in config_lines:
         if "=" in line:
@@ -120,22 +119,22 @@ def validate_files():
     tampered_pdf_count = 0
     for i, pdf_path in enumerate(pdf_paths):
         if not pdf_path:
-            logging.debug(f"PDF file {i} path is missing or empty in the configuration.")
+            logger.debug(f"PDF file {i} path is missing or empty in the configuration.")
             tampered_pdf_count += 1
         else:
-            logging.debug(f"Checking PDF file {i} at path: {pdf_path}")
+            logger.debug(f"Checking PDF file {i} at path: {pdf_path}")
             print(f"Actual path {i}: '{pdf_path}'")
 
             if not os.path.exists(pdf_path):
-                logging.debug(f"PDF file {i} does not exist at path: {pdf_path}")
+                logger.debug(f"PDF file {i} does not exist at path: {pdf_path}")
                 tampered_pdf_count += 1
             else:
                 pdf_hash_actual = calculate_sha256(pdf_path)
-                logging.debug(f"Calculated PDF hash for file {i}: {pdf_hash_actual}")
-                logging.debug(f"Expected PDF hash for file {i}: {pdf_hashes_expected[i]}")
+                logger.debug(f"Calculated PDF hash for file {i}: {pdf_hash_actual}")
+                logger.debug(f"Expected PDF hash for file {i}: {pdf_hashes_expected[i]}")
 
                 if pdf_hash_actual.strip() != pdf_hashes_expected[i].strip():
-                    logging.debug(f"PDF file {i} has been tampered with.")
+                    logger.debug(f"PDF file {i} has been tampered with.")
                     tampered_pdf_count += 1
 
     docx_paths = [config_dict.get(f"DOCX_PATH_{i}", "").strip() for i in range(6)]  # Assuming 6 DOCX files
@@ -144,22 +143,22 @@ def validate_files():
     tampered_docx_count = 0
     for i, docx_path in enumerate(docx_paths):
         if not docx_path:
-            logging.debug(f"DOCX file {i} path is missing or empty in the configuration.")
+            logger.debug(f"DOCX file {i} path is missing or empty in the configuration.")
             tampered_docx_count += 1
         else:
-            logging.debug(f"Checking DOCX file {i} at path: {docx_path}")
+            logger.debug(f"Checking DOCX file {i} at path: {docx_path}")
             print(f"Actual path {i}: '{docx_path}'")
 
             if not os.path.exists(docx_path):
-                logging.debug(f"DOCX file {i} does not exist at path: {docx_path}")
+                logger.debug(f"DOCX file {i} does not exist at path: {docx_path}")
                 tampered_docx_count += 1
             else:
                 docx_hash_actual = calculate_sha256(docx_path)
-                logging.debug(f"Calculated DOCX hash for file {i}: {docx_hash_actual}")
-                logging.debug(f"Expected DOCX hash for file {i}: {docx_hashes_expected[i]}")
+                logger.debug(f"Calculated DOCX hash for file {i}: {docx_hash_actual}")
+                logger.debug(f"Expected DOCX hash for file {i}: {docx_hashes_expected[i]}")
 
                 if docx_hash_actual.strip() != docx_hashes_expected[i].strip():
-                    logging.debug(f"DOCX file {i} has been tampered with.")
+                    logger.debug(f"DOCX file {i} has been tampered with.")
                     tampered_docx_count += 1
 
     total_tampered_count = tampered_pdf_count + tampered_docx_count
@@ -176,13 +175,13 @@ def execute_canary_logic():
         result = validate_files()
 
         if result:
-            logging.debug("More than 5 files have been modified or tampered with.")
+            logger.debug("More than 5 files have been modified or tampered with.")
             return 1
         else:
-            logging.debug("All files have not been modified or tampered with.")
+            logger.debug("All files have not been modified or tampered with.")
             return 0
     elif os.path.exists("config.txt") or os.path.exists("keys.txt"):
-        logging.info("Tampering detected. Both config.txt and keys.txt are required.")
+        logger.info("Tampering detected. Both config.txt and keys.txt are required.")
         return 1
     else:
         # Step 1: File Generation
@@ -211,15 +210,15 @@ def execute_canary_logic():
             generate_docx(docx_path, i)
 
         # Print the generated file paths
-        logging.debug("Generated PDF Paths: %s", pdf_paths)
-        logging.debug("Generated DOCX Paths: %s", docx_paths)
+        logger.debug("Generated PDF Paths: %s", pdf_paths)
+        logger.debug("Generated DOCX Paths: %s", docx_paths)
 
         # Step 2: Storage
         # No changes needed here, already using the generated paths
 
         # Print the final storage paths
-        logging.debug("PDF Storage Paths: %s", pdf_paths)
-        logging.debug("DOCX Storage Paths: %s", docx_paths)
+        logger.debug("PDF Storage Paths: %s", pdf_paths)
+        logger.debug("DOCX Storage Paths: %s", docx_paths)
 
         # Step 3: Hash Calculation
         pdf_hashes = [calculate_sha256(pdf_path) for pdf_path in pdf_paths]
@@ -231,7 +230,7 @@ def execute_canary_logic():
         # Step 5: Encryption
         encrypt_config_file()
 
-        logging.debug("Files and configuration generated.")
+        logger.debug("Files and configuration generated.")
         return 0
 
 

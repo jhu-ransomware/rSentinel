@@ -11,25 +11,23 @@ import entropy
 import diagnose
 import communication
 import monitor
-import logging
 import inspect
 import msvcrt
 import code_integrity_check
+from logconfig import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 tested_up = None
-DEMO = 0
-FAULTY = None
+FAULTY = 1
 CODE_INTEGRITY_CHECK_FLAG = False
 
 def start_algo(faulty, connections, num_connections, node_num):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
-    logging.debug(f"Currently executing: {current_function_name}")
+    logger.debug(f"Currently executing: {current_function_name}")
 
     global FAULTY
     global tested_up
-    global DEMO
 
     FAULTY = faulty
     tested_up = [-1] * constants.NUM_NODES
@@ -45,8 +43,6 @@ def start_algo(faulty, connections, num_connections, node_num):
     # Creating socket
     server_fd.bind(('0.0.0.0', constants.PORT))
     server_fd.listen(10)
-
-    DEMO = int(input("Please enter if you wish to send results to a demo (1 for yes, 0 for no):\n"))
 
     # Start the thread
     threading.Thread(target=receive_thread, args=(server_fd,)).start()
@@ -70,18 +66,19 @@ def start_algo(faulty, connections, num_connections, node_num):
     # Wait for user input to begin testing
     ready = 0
     while not ready:
-        ready = int(input("Enter 1 to begin testing other nodes:\n"))
-
+        ready = int(input("Enter 1 to begin testing other nodes: "))
+    
     threading.Thread(target=adaptive_dsd, args=(faulty, connections, num_connections, node_num, file_lookup)).start()
 
 
 def adaptive_dsd(faulty, connections, num_connections, node_num, lookup):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
-    logging.debug(f"Currently executing: {current_function_name}")
+    logger.debug(f"Currently executing: {current_function_name}")
+
+    code_integrity_status = False
 
     global FAULTY
     global tested_up
-    global DEMO
 
     FAULTY = faulty
 
@@ -97,62 +94,60 @@ def adaptive_dsd(faulty, connections, num_connections, node_num, lookup):
             try:
                 input_value = int(input())
             except Exception as e:
-                logging.error(f"Input value is incorrect - {e}")
+                logger.error(f"Input value is incorrect - {e}")
                 continue
-            
-            # Commenting out below for now to not allow manual update of fault
-            # if input_value in [0, 1]:
-            #     FAULTY = input_value
-            #     print(f"Fault status changed to {FAULTY}")
+
+            if input_value in [0,1]:
+                FAULTY = input_value
 
             if input_value == 2:
                 diagnosis = diagnose.diagnose(tested_up, node_num)
                 for i in range(constants.NUM_NODES):
                     if diagnosis[i] == 1:
-                        logging.debug(f"{current_function_name} - Node {i} is faulty")
+                        logger.error(f"{current_function_name} - Node {i} is faulty")
                     else:
-                        logging.debug(f"{current_function_name} - Node {i} is not faulty")
+                        logger.debug(f"{current_function_name} - Node {i} is not faulty")
             else:
                 print("Invalid input. Enter 1 or 0 to change fault status, or 2 to diagnose.")
                 
-        if curr_time > constants.TESTING_INTERVAL * 2:
-            logging.debug(f"{current_function_name} - Starting the testing now after {constants.TESTING_INTERVAL} seconds")
-            logging.info(f"{current_function_name} - Tested up array at testing interval - {tested_up}")
+        if curr_time > constants.TESTING_INTERVAL and not FAULTY:
+            logger.info(f"{current_function_name} - Starting the testing now after {constants.TESTING_INTERVAL} seconds. Tested up array - {tested_up}")
             update_arr(connections, num_connections, node_num)
-            if DEMO:
-                diagnosis = diagnose.diagnose(tested_up, node_num)
                 
-
+            detection_status = monitor.run_detection(lookup)
+            logger.info(f"{current_function_name} - Detection status - {detection_status}")
             # update lookup table
-            if not FAULTY and monitor.run_detection(lookup):
+            if not FAULTY and detection_status:
                 FAULTY = 1
             
             #tested_up = [0,2,0]
             #node_num = 1
+            logger.info(f"{current_function_name} - Starting diagnostics tested_up = {tested_up} and node_num = {node_num}")
             diagnosis = diagnose.diagnose(tested_up, node_num)
+            logger.info(f"{current_function_name} - Diagnostics completed")
             for i in range(constants.NUM_NODES):
                 if diagnosis[i] == 1:
-                    logging.info(f"{current_function_name} - Node {i} is faulty")
+                    logger.error(f"{current_function_name} - Node {i} is faulty")
                 else:
-                    logging.info(f"{current_function_name} - Node {i} is not faulty")
+                    logger.debug(f"{current_function_name} - Node {i} is not faulty")
 
             start = time.time()
 
 def receive_thread(server_fd):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
-    logging.debug(f"Currently executing: {current_function_name}")
+    logger.debug(f"Currently executing: {current_function_name}")
     try:
         while True:
             time.sleep(2)
             receiving(server_fd)
     except Exception as e:
-        logging.error(f"{current_function_name} - Error - {e}")
+        logger.error(f"{current_function_name} - Error - {e}")
     finally:
         server_fd.close()
 
 def receiving(server_fd):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
-    logging.debug(f"Currently executing: {current_function_name}")
+    logger.debug(f"Currently executing: {current_function_name}")
 
     address = ('', 0)  # Dummy initial value
     buffer_size = 2000
@@ -161,98 +156,117 @@ def receiving(server_fd):
     k = 0
 
     global tested_up
+    global FAULTY
 
     try:
         while True:
             k += 1
             try:
                 ready_sockets, _, _ = select.select(current_sockets, [], [])
-                logging.debug(f"{current_function_name} - Ready sockets read successfully")
+                logger.debug(f"{current_function_name} - Ready sockets read successfully")
             except Exception as e:
-                logging.error(f"{current_function_name} - Error reading the ready sockets: {e}")
+                logger.error(f"{current_function_name} - Error reading the ready sockets: {e}")
             
             for s in ready_sockets:
                 if s == server_fd:
                     try:
                         client_socket, client_address = s.accept()
                         current_sockets.append(client_socket)
-                        logging.debug(f"{current_function_name} - Client socket and address {client_address} details extracted sucessfully from a ready socket")
+                        logger.debug(f"{current_function_name} - Client socket and address {client_address} details extracted sucessfully from a ready socket")
                     except Exception as e:
-                        logging.error(f"{current_function_name} - Error extracting client details from ready socket - {e}")
+                        logger.error(f"{current_function_name} - Error extracting client details from ready socket - {e}")
                 else:
                     msg_type = communication.receive_msg(s)
                     if msg_type == constants.TEST_MSG:
                         try:
+                            logger.info(f"{current_function_name} - Sending fault status - {FAULTY}")
                             communication.send_fault_status(s, FAULTY)
-                            logging.debug(f"{current_function_name} - Message Type - TEST_MSG - sent fault status successfully")
+                            logger.debug(f"{current_function_name} - Message Type - TEST_MSG - sent fault status successfully")
                         except Exception as e:
-                            logging.error(f"{current_function_name} - Message Type - TEST_MSG - Error sending message - {e}")
+                            logger.error(f"{current_function_name} - Message Type - TEST_MSG - Error sending message - {e}")
                     elif msg_type == constants.REQUEST_MSG:
                         try:
                             communication.send_array(s, tested_up)
-                            logging.debug(f"{current_function_name} - Message Type - REQUEST_MSG - sent array successfully")
+                            logger.debug(f"{current_function_name} - Message Type - REQUEST_MSG - sent array successfully")
                         except Exception as e:
-                            logging.error(f"{current_function_name} - Message Type - REQUEST_MSG - Error sending array - {e}")
+                            logger.error(f"{current_function_name} - Message Type - REQUEST_MSG - Error sending array - {e}")
                     elif msg_type == constants.CODE_INTEGRITY_MSG:
                         try:
                             communication.send_code_integrity_signature(s)
                         except Exception as e:
-                            logging.error(f"{current_function_name} - Message Type - CODE_INTEGRITY_MSG - Error sending data - {e}")
+                            logger.error(f"{current_function_name} - Message Type - CODE_INTEGRITY_MSG - Error sending data - {e}")
                     current_sockets.remove(s)
             if k == (len(current_sockets) * 2):
                 break
     except socket.error as e:
-        logging.error(f"Socket error: {e}")
+        logger.error(f"Socket error: {e}")
 
 def update_arr(connections, num_connections, node_num):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
-    logging.debug(f"Currently executing: {current_function_name}")
+    logger.debug(f"Currently executing: {current_function_name}")
 
     global tested_up
     global CODE_INTEGRITY_CHECK_FLAG
+    global FAULTY
 
     found_non_faulty = False
     for i in range(num_connections):
         try:
 
+            if not CODE_INTEGRITY_CHECK_FLAG:
+                logger.debug(f"{current_function_name} - Initiating code integrity check")
+                sock = communication.init_client_to_server(connections[i]['ip_addr'])
+                if sock is None:
+                    logger.error(f"Socket not created to IP: {connections[i]['ip_addr']}")
+
+                logger.debug(f"Socket creation successful to IP: {connections[i]['ip_addr']}")
+                code_integrity_status = communication.request_code_integrity_status(sock)
+                CODE_INTEGRITY_CHECK_FLAG = True
+
+                if not code_integrity_status:
+                    FAULTY = 1
+
+                try:
+                    sock.close()
+                except Exception as e:
+                    logger.error(f"{current_function_name} - Failed to close socket which is not alive")
+
             # Ask for fault status
             sock = communication.init_client_to_server(connections[i]['ip_addr'])
             if sock is None:
-                logging.debug(f"Issue creating socket to IP: {connections[i]['ip_addr']}")
+                logger.error(f"Socket not created to IP: {connections[i]['ip_addr']}")
                 continue
             
-            logging.debug(f"Socket creation successful to IP: {connections[i]['ip_addr']}")
+            logger.debug(f"Socket creation successful to IP: {connections[i]['ip_addr']}")
             fault_status = communication.request_fault_status(sock)
-            sock.close()
-
-            # Ask for code integrity if not done
-            if not CODE_INTEGRITY_CHECK_FLAG:
-                sock = communication.init_client_to_server(connections[i]['ip_addr'])
-                if sock is None:
-                    logging.debug(f"Issue creating socket to IP: {connections[i]['ip_addr']}")
-                    continue
-            
-                logging.debug(f"Socket creation successful to IP: {connections[i]['ip_addr']}")
-                code_integrity_status = communication.request_code_integrity_signature(sock)
-                CODE_INTEGRITY_CHECK_FLAG = True
+            try:
                 sock.close()
+            except Exception as e:
+                logger.error(f"{current_function_name} - Failed to close socket which is not alive")
 
             if (not FAULTY and not fault_status) or (FAULTY and fault_status):  # TODO: Add more logic here
                 sock = communication.init_client_to_server(connections[i]['ip_addr'])
                 if sock is None:
-                    logging.debug(f"Issue creating socket to IP: {connections[i]['ip_addr']}")
+                    logger.error(f"Socket not created to IP: {connections[i]['ip_addr']}")
                     continue
                 new_arr = communication.request_arr(sock)
-                logging.debug(f"{current_function_name} - New array value received from {connections[i]['ip_addr']}  - {new_arr}")
-                sock.close()
+                logger.info(f"{current_function_name} - New array value received from {connections[i]['ip_addr']}  - {new_arr}")
+                try:
+                    sock.close()
+                except Exception as e:
+                    logger.error(f"{current_function_name} - Failed to close socket which is not alive")
 
                 sock = communication.init_client_to_server(connections[i]['ip_addr'])
 
                 if sock is None:
-                    logging.debug(f"Issue creating socket to IP: {connections[i]['ip_addr']}")
+                    logger.error(f"Socket not created to IP: {connections[i]['ip_addr']}")
                     continue
                 fault_status = communication.request_fault_status(sock)  # Check fault status again before updating array
-                sock.close()
+                logger.info(f"{current_function_name} - received fault status from {connections[i]['ip_addr']}  - {fault_status}")
+                try:
+                    sock.close()
+                except Exception as e:
+                    logger.error(f"{current_function_name} - Failed to close socket which is not alive")
                 
                 if (not FAULTY and not fault_status) or (FAULTY and fault_status):
                     update_tested_up(new_arr, node_num, connections[i]['node_num'])
@@ -260,10 +274,13 @@ def update_arr(connections, num_connections, node_num):
                     break
 
         except socket.error as e:
-            logging.error(f"{current_function_name} - Socket error - {e}")
+            logger.error(f"{current_function_name} - Socket error - {e}")
         
         finally:
-            sock.close()
+            try:
+                sock.close()
+            except Exception as e:
+                logger.error(f"{current_function_name} - Failed to close socket which is not alive")
 
     if not found_non_faulty:
         tested_up[node_num] = -1
@@ -272,11 +289,11 @@ def update_arr(connections, num_connections, node_num):
 
 def update_tested_up(new_arr, node, tested_node):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
-    logging.debug(f"Currently executing: {current_function_name}")
+    logger.debug(f"Currently executing: {current_function_name}")
 
     global tested_up
 
-    logging.debug(f"{current_function_name} - Before updation of tested_up - {tested_up}")
+    logger.debug(f"{current_function_name} - Before updation of tested_up - {tested_up}")
 
     tested_up[node] = tested_node
 
@@ -284,4 +301,4 @@ def update_tested_up(new_arr, node, tested_node):
         if i != node:
             tested_up[i] = new_arr[i]
 
-    logging.debug(f"{current_function_name} - After updation of tested_up - {tested_up}")
+    logger.info(f"{current_function_name} - After updation of tested_up - {tested_up}")

@@ -20,6 +20,9 @@ TEST_DIR = "./test/"
 
 CODE_DIR = "./"
 
+COMBINED_HASH_VARIABLE = "RSENTINEL_COMBINED_HASH"
+ENV_VAR_DEFAULT_VALUE = "Hello World"
+
 # Structures
 
 class Connection:

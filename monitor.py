@@ -1,12 +1,12 @@
 import constants
 import entropy
 import inspect
-import logging
 import canary
 import fuzzysd
 import file_type_changes as ftc
+from logconfig import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 def run_detection(entropies):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
@@ -18,7 +18,7 @@ def run_detection(entropies):
     encrp_files = update_entropy(entropies)
     if encrp_files / len(entropies) > constants.ENTROPHY_INCREASE_BATCH:
         cnt += 1
-
+    
     logger.info(f"Count value after entropy: {cnt}")
 
     # logger.debug(f"Currently executing: File Type Changes")
@@ -43,6 +43,7 @@ def run_detection(entropies):
 
     logger.info(f"Count value after all checks: {cnt}")
     if cnt > 0:
+        logger.error(f"{current_function_name} = Node is faulty")
         return 1
     else:
         return 0

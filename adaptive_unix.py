@@ -13,8 +13,9 @@ import communication
 import monitor
 import logging
 import inspect
+from logconfig import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 tested_up = None
 DEMO = 0
@@ -30,7 +31,7 @@ def kbhit():
 
 def start_algo(faulty, connections, num_connections, node_num):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
-    logging.debug(f"Currently executing: {current_function_name}")
+    logger.debug(f"Currently executing: {current_function_name}")
 
     global FAULTY
     global tested_up
@@ -56,7 +57,7 @@ def start_algo(faulty, connections, num_connections, node_num):
     files = [f for f in files if f not in ['.', '..']]
     file_count = len(files)
 
-    logging.debug(f"File count in 'test' directory: {file_count}")
+    logger.debug(f"File count in 'test' directory: {file_count}")
     
 
     file_lookup = []
@@ -77,7 +78,7 @@ def start_algo(faulty, connections, num_connections, node_num):
 
 def adaptive_dsd(faulty, connections, num_connections, node_num, lookup):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
-    logging.debug(f"Currently executing: {current_function_name}")
+    logger.debug(f"Currently executing: {current_function_name}")
 
     global FAULTY
     global tested_up
@@ -97,7 +98,7 @@ def adaptive_dsd(faulty, connections, num_connections, node_num, lookup):
             try:
                 input_value = int(input())
             except Exception as e:
-                logging.error(f"Input value is incorrect - {e}")
+                logger.error(f"Input value is incorrect - {e}")
                 continue
             
             # Commenting out below for now to not allow manual update of fault
@@ -159,18 +160,18 @@ def receiving(server_fd):
             if k == (len(current_sockets) * 2):
                 break
     except socket.error as e:
-        logging.debug(f"Socket error: {e}")
+        logger.debug(f"Socket error: {e}")
     finally:
         try:
-            logging.debug("Closing socket")
+            logger.debug("Closing socket")
             s.close()
             current_sockets.remove(s)
         except Exception as e:
-            logging.error(f"Error closing socket: {e}")
+            logger.error(f"Error closing socket: {e}")
 
 def update_arr(connections, num_connections, node_num):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
-    logging.debug(f"Currently executing: {current_function_name}")
+    logger.debug(f"Currently executing: {current_function_name}")
 
     global tested_up
 
@@ -179,11 +180,11 @@ def update_arr(connections, num_connections, node_num):
         try:
             sock = communication.init_client_to_server(connections[i]['ip_addr'])
             if sock is None:
-                logging.debug(f"Issue creating socket to IP: {connections[i]['ip_addr']}")
+                logger.debug(f"Issue creating socket to IP: {connections[i]['ip_addr']}")
                 # print("Issue creating a socket")
                 continue
             
-            logging.debug(f"Socket creation successful to IP: {connections[i]['ip_addr']}")
+            logger.debug(f"Socket creation successful to IP: {connections[i]['ip_addr']}")
             # Ask for fault status
             fault_status = communication.request_fault_status(sock)
             if (not FAULTY and not fault_status) or (FAULTY and fault_status):  # TODO: Add more logic here
@@ -208,7 +209,7 @@ def update_arr(connections, num_connections, node_num):
 
 def update_tested_up(new_arr, node, tested_node):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
-    logging.debug(f"Currently executing: {current_function_name}")
+    logger.debug(f"Currently executing: {current_function_name}")
 
     global tested_up
 
