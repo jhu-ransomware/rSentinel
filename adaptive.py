@@ -35,7 +35,7 @@ def start_algo(faulty, connections, num_connections, node_num):
     # Check if the './test' directory exists
     test_directory = "./test"
     if not os.path.exists(test_directory):
-        logging.error(f"{current_function_name} - The '{test_directory}' directory does not exist.")
+        logger.error(f"{current_function_name} - The '{test_directory}' directory does not exist.")
         return
 
     server_fd = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -53,9 +53,9 @@ def start_algo(faulty, connections, num_connections, node_num):
     file_count = len(files)
 
     if file_count == 0:
-        logging.warning(f"{current_function_name} - There are no files in the '{test_directory}' directory.")
+        logger.warning(f"{current_function_name} - There are no files in the '{test_directory}' directory.")
 
-    logging.debug(f"File count in '{test_directory}' directory: {file_count}")
+    logger.debug(f"File count in '{test_directory}' directory: {file_count}")
 
     file_lookup = []
     for file in files:
