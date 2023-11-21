@@ -87,7 +87,7 @@ def calculate_entropy_for_files_in_directory(directory):
         logger.error(f"Error processing files in directory {directory}: {e}")
 
 def main():
-    user_directory = "/home/matrix/Downloads"
+    user_directory = "C:\\Users\\RWareUser\\Downloads"
     return calculate_entropy_for_files_in_directory(user_directory)
 
 if __name__ == "__main__":
