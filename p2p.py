@@ -4,6 +4,7 @@ import communication
 import constants
 from colorama import Fore, Style, init
 from logconfig import get_logger
+import argparse
 
 logger = get_logger(__name__)
 
@@ -12,11 +13,29 @@ if sys.platform == "win32":
 else: # darwin and Linux
     import adaptive_unix as adaptive
 
-def main():
-    logger.debug("Starting the application")
+rSentinel_art = r"""
+        _________              __  .__              .__   
+_______/   _____/ ____   _____/  |_|__| ____   ____ |  |  
+\_  __ \_____  \_/ __ \ /    \   __\  |/    \_/ __ \|  |  
+ |  | \/        \  ___/|   |  \  | |  |   |  \  ___/|  |__
+ |__| /_______  /\___  >___|  /__| |__|___|  /\___  >____/
+              \/     \/     \/             \/     \/      
+"""
 
-    this_node = int(input("What's your node number:"))
-    faulty = int(input("Enter your fault status:"))
+def main():
+    logger.info(Fore.GREEN + rSentinel_art)
+    logger.info(Fore.RESET + "rSentinel is now monitoring your system for ransomware activity")
+    this_node = None
+    fault_status = None
+
+    parser = argparse.ArgumentParser(description='P2P Node Configuration')
+    parser.add_argument('-n', '--this_node', type=int, required=True, help='Node number')
+    parser.add_argument('-f', '--fault_status', type=int, required=True, help='Fault status (0 or 1)')
+
+    args = parser.parse_args()
+
+    this_node = args.this_node
+    fault_status = args.fault_status
 
     try:
         with open("connections.txt", "r") as file:
@@ -46,7 +65,7 @@ def main():
     for conn in connections:
         logger.debug(f"ip_addr:{conn['ip_addr']} node_num:{conn['node_num']}")
 
-    adaptive.start_algo(faulty, connections, num_connections, this_node)
+    adaptive.start_algo(fault_status, connections, num_connections, this_node)
 
 if __name__ == "__main__":
     main()

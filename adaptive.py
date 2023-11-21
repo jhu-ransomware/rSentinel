@@ -59,7 +59,7 @@ def start_algo(faulty, connections, num_connections, node_num):
     # Wait for user input to begin testing
     ready = 0
     while not ready:
-        ready = int(input("Enter 1 to begin testing other nodes:\n"))
+        ready = int(input("Enter 1 to begin testing other nodes: "))
     
     threading.Thread(target=adaptive_dsd, args=(faulty, connections, num_connections, node_num, file_lookup)).start()
 
