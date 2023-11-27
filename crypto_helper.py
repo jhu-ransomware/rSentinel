@@ -35,7 +35,7 @@ def decrypt_config_file():
     decrypted_data = unpad(cipher.decrypt(ciphertext), AES.block_size)
     config_str = decrypted_data.decode("utf-8")
     config_lines = config_str.split("\n")
-    logger.info(f"The contents of the config file are: \n {config_str}")
+    # logger.info(f"The contents of the config file are: \n {config_str}")
     config_dict = {}
     for line in config_lines:
         if "=" in line:
