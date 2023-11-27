@@ -17,12 +17,7 @@ def run_detection():
     result_entropy = entropy.main()
     if result_entropy:
         cnt += 1
-    
     logger.info(f"Count value after entropy: {cnt}")
-
-    # logger.debug(f"Currently executing: File Type Changes")
-    # if ftc.check_magic_numbers():
-    #     cnt += 1
 
     logger.info(f"Currently executing: Canary File Check")
     result_canary = canary.execute_canary_logic()
@@ -39,6 +34,11 @@ def run_detection():
     if status == 1:
         cnt += 1
     logger.info(f"Count value after fuzzy: {cnt}")
+
+    logger.debug(f"Currently executing: File Type Changes")
+    if ftc.check_magic_numbers():
+        cnt += 1
+    logger.info(f"Count value after File Type Check: {cnt}")
 
     logger.info(f"Count value after all checks: {cnt}")
     if cnt > 0:

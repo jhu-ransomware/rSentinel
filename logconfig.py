@@ -26,7 +26,7 @@ class CustomFormatter(logging.Formatter):
 
 def get_logger(name):
     logger = logging.getLogger(name)
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.DEBUG)
 
     # Check if the logger already has handlers to avoid duplicate messages
     if not logger.handlers:
