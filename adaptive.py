@@ -99,16 +99,6 @@ def adaptive_dsd(faulty, connections, num_connections, node_num):
 
             if input_value in [0,1]:
                 FAULTY = input_value
-
-            if input_value == 2:
-                diagnosis = diagnose.diagnose(tested_up, node_num)
-                for i in range(constants.NUM_NODES):
-                    if diagnosis[i] == 1:
-                        logger.error(f"{current_function_name} - Node {i} is faulty")
-                    else:
-                        logger.debug(f"{current_function_name} - Node {i} is not faulty")
-            else:
-                print("Invalid input. Enter 1 or 0 to change fault status, or 2 to diagnose.")
                 
         if curr_time > constants.TESTING_INTERVAL and not FAULTY:
             logger.info(f"{current_function_name} - Starting the testing now after {constants.TESTING_INTERVAL} seconds. Tested up array - {tested_up}")

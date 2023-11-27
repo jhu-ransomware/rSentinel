@@ -123,7 +123,7 @@ def validate_files():
             tampered_pdf_count += 1
         else:
             logger.debug(f"Checking PDF file {i} at path: {pdf_path}")
-            print(f"Actual path {i}: '{pdf_path}'")
+            logger.debug(f"Actual path {i}: '{pdf_path}'")
 
             if not os.path.exists(pdf_path):
                 logger.debug(f"PDF file {i} does not exist at path: {pdf_path}")
@@ -147,7 +147,7 @@ def validate_files():
             tampered_docx_count += 1
         else:
             logger.debug(f"Checking DOCX file {i} at path: {docx_path}")
-            print(f"Actual path {i}: '{docx_path}'")
+            logger.debug(f"Actual path {i}: '{docx_path}'")
 
             if not os.path.exists(docx_path):
                 logger.debug(f"DOCX file {i} does not exist at path: {docx_path}")
