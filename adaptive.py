@@ -99,6 +99,7 @@ def adaptive_dsd(faulty, connections, num_connections, node_num):
 
             if input_value in [0,1]:
                 FAULTY = input_value
+                logger.info(f"Fault status updated to {input_value}")
                 
         if curr_time > constants.TESTING_INTERVAL and not FAULTY:
             logger.info(f"{current_function_name} - Starting the testing now after {constants.TESTING_INTERVAL} seconds. Tested up array - {tested_up}")
