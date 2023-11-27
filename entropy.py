@@ -59,8 +59,7 @@ def calculate_entropy_for_files_in_directory(directory):
         threshold_lower = 7.980
         threshold_upper = 8.000
 
-        with ThreadPoolExecutor() as executor:
-            results = list(executor.map(calc_entropy_file, files))
+        results = [calc_entropy_file(file) for file in files]
 
         for result in results:
             if result is not None:  # Check for files that were successfully processed
