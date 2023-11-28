@@ -3,6 +3,7 @@ import math
 import time
 from concurrent.futures import ThreadPoolExecutor
 from logconfig import get_logger
+import constants
 
 logger = get_logger(__name__)
 
@@ -40,15 +41,24 @@ def calc_entropy_file(filename):
         logger.error(f"Error opening file {filename}: {e}")
         return -1
 
-def calculate_entropy_for_files_in_directory(directory):
+def calculate_entropy_for_files_in_directory(directories):
     try:
         start_time = time.time()
         files = []
 
-        for foldername, subfolders, filenames in os.walk(directory):
-            for filename in filenames:
-                file_path = os.path.join(foldername, filename)
-                files.append(file_path)
+        for directory in directories:
+            file_count = 0
+            for foldername, subfolders, filenames in os.walk(directory):
+                for filename in filenames:
+                    file_path = os.path.join(foldername, filename)
+                    file_size = os.path.getsize(file_path)
+
+                    if file_size < constants.ENTROPY_FILE_SIZE_LIMIT * 1024:
+                        file_count += 1
+                        files.append(file_path)
+
+                        if file_count >= constants.ENTROPY_FILE_COUNT_PER_DIRECTORY:
+                            break
         
         logger.debug("List of files:")
         for file_path in files:
@@ -86,8 +96,8 @@ def calculate_entropy_for_files_in_directory(directory):
         logger.error(f"Error processing files in directory {directory}: {e}")
 
 def main():
-    user_directory = "C:\\Users\\RWareUser\\Downloads"
-    return calculate_entropy_for_files_in_directory(user_directory)
+    user_directories = ["C:\\Users\\RWareUser\\Downloads", "C:\\Users\\RWareUser\\Documents", "C:\\Users\\RWareUser\\Desktop"]
+    return calculate_entropy_for_files_in_directory(user_directories)
 
 if __name__ == "__main__":
     main()
