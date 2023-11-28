@@ -4,6 +4,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from logconfig import get_logger
 import constants
+import random
 
 logger = get_logger(__name__)
 
@@ -44,24 +45,26 @@ def calc_entropy_file(filename):
 def calculate_entropy_for_files_in_directory(directories):
     try:
         start_time = time.time()
-        files = []
+        selected_files = []
 
         for directory in directories:
-            file_count = 0
+            eligible_files = []
             for foldername, subfolders, filenames in os.walk(directory):
                 for filename in filenames:
                     file_path = os.path.join(foldername, filename)
                     file_size = os.path.getsize(file_path)
 
-                    if file_size < constants.ENTROPY_FILE_SIZE_LIMIT * 1024:
-                        file_count += 1
-                        files.append(file_path)
+                    if file_size <= constants.ENTROPY_FILE_SIZE_LIMIT * 1024:
+                        eligible_files.append(file_path)
 
-                        if file_count >= constants.ENTROPY_FILE_COUNT_PER_DIRECTORY:
-                            break
-        
+            # Randomly select files from eligible files
+            if len(eligible_files) > constants.ENTROPY_FILE_COUNT_PER_DIRECTORY:
+                selected_files.extend(random.sample(eligible_files, constants.ENTROPY_FILE_COUNT_PER_DIRECTORY))
+            else:
+                selected_files.extend(eligible_files)
+
         logger.info("List of files:")
-        for file_path in files:
+        for file_path in selected_files:
             logger.info(file_path)
 
         total_files = 0  # Initialize the count for successfully processed files
@@ -69,7 +72,7 @@ def calculate_entropy_for_files_in_directory(directories):
         threshold_lower = 7.980
         threshold_upper = 8.000
 
-        results = [calc_entropy_file(file) for file in files]
+        results = [calc_entropy_file(file) for file in selected_files]
 
         for result in results:
             if result is not None:  # Check for files that were successfully processed
