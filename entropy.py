@@ -60,9 +60,9 @@ def calculate_entropy_for_files_in_directory(directories):
                         if file_count >= constants.ENTROPY_FILE_COUNT_PER_DIRECTORY:
                             break
         
-        logger.debug("List of files:")
+        logger.info("List of files:")
         for file_path in files:
-            logger.debug(file_path)
+            logger.info(file_path)
 
         total_files = 0  # Initialize the count for successfully processed files
         high_entropy_files = 0
