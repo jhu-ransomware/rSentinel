@@ -15,12 +15,22 @@ import inspect
 import msvcrt
 import code_integrity_check
 from logconfig import get_logger
+import crypto
 
 logger = get_logger(__name__)
 
 tested_up = None
 FAULTY = 1
 CODE_INTEGRITY_CHECK_FLAG = False
+
+# Global variables for CA
+CA_addr = "127.0.0.1"
+CA_port = 3000
+CA_flag_port = 3001
+cert = None
+ca_pem_path = "CA.pem"
+pri_key = 'pri.key'
+crt_name = 'node.crt'
 
 def start_algo(faulty, connections, num_connections, node_num):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name

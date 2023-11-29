@@ -8,8 +8,95 @@ import inspect
 import code_integrity_check
 import os
 from logconfig import get_logger
+from cryptography.hazmat.primitives import serialization
+import ssl
 
 logger = get_logger(__name__)
+
+pri_key = 'pri.key'
+crt_name = 'node.crt'
+hostname = 'node1.c0conut.com'
+
+"""
+send the CSR to CA
+"""
+def req_CSR(CA_addr, CA_port, csr):
+    if csr != None:
+        # Send the CSR to the Baby CA
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            # Connect to server and send data
+            sock.connect((CA_addr, CA_port))
+            print("Sending CSR...")
+            sock.sendall(csr.public_bytes(serialization.Encoding.PEM))
+            print("CSR sent!")
+        
+            # Receive data from the server and shut down
+            received = sock.recv(2048)
+            if len(received) > 20: # fail: 15
+
+                if os.path.exists(crt_name):
+                    os.remove(crt_name)
+
+                with open(crt_name, 'wb') as f:
+                    f.write(received)
+
+                print(f"Certificate saved as {crt_name}")  
+            else:
+                print("Din't receive Certificate from Baby CA!")
+
+"""
+Send flag value to CA if node is faulty
+Input: CA IP, CA port, faulty (True/False)
+"""
+def send_flag_to_CA(CA_addr, CA_flag_port, faulty):
+    # only send if node is in faulty status
+    if faulty:
+        print("Node in faulty status. Report to CA.")
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.connect((CA_addr, CA_flag_port))
+            sock.send(b'1\n')
+
+"""
+send message with SSL socket
+Input: sock, socket obj; msg, class bytes; ca_pem_path
+Client-side operation
+"""
+def send_msg_SSL(sock, msg, ca_pem_path):
+    #print(f"msg to send: {msg}")
+    context = ssl.create_default_context()
+    context.load_verify_locations(ca_pem_path)
+
+    # wrap sock
+    ssl_sock = context.wrap_socket(sock, server_hostname=hostname)
+    ssl_sock.sendall(msg)
+    #ssl_sock.close()
+
+"""
+Verifies an SSL communication on the receiving end against a CA-issued certificate.
+Input: sock, socket obj; cert, path; prikey, path
+Server-side operation
+"""
+def verify_recv(sock, cert, prikey):
+    context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+
+    context.load_cert_chain(certfile=cert, keyfile=prikey)
+
+    # wrap sock
+    ssl_sock = context.wrap_socket(sock, server_side=True)
+
+    try:
+        # Receive data over SSL socket
+        received = ssl_sock.recv(1024)
+
+        # Close the SSL socket
+        #ssl_sock.close()
+
+        return received
+    # Handle SSL errors e.g. certificate verification failure
+    except ssl.SSLError as e:
+        print(f"SSL verification failed. SSL error: {e}")
+        #ssl_sock.close()
+        return None
 
 def request_arr(sock):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
