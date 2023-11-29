@@ -15,7 +15,24 @@ logger = get_logger(__name__)
 
 pri_key = 'pri.key'
 crt_name = 'node.crt'
-hostname = 'node1.c0conut.com'
+# dict for hostnames
+hostnames = {
+    '10.0.0.4' : 'node1.c0conut.com',
+    '10.0.0.5' : 'node2.c0conut.com',
+    '10.0.0.6' : 'node3.c0conut.com',
+}
+
+def find_hostname(sock):
+    #socket should be connected
+    dest_ip = sock.getpeername()[0]
+
+    # Find the hostname using the IP
+    hostname = hostnames.get(dest_ip)
+
+    if hostname:
+        return hostname
+    else:
+        return "Hostname not found for IP: " + dest_ip
 
 """
 send the CSR to CA
@@ -72,6 +89,8 @@ def send_msg_SSL(sock, msg, ca_pem_path):
     context = ssl.create_default_context()
     context.load_verify_locations(ca_pem_path)
 
+    hostname = find_hostname(sock)
+
     try:
         with context.wrap_socket(sock, server_hostname=hostname) as ssl_sock:
             ssl_sock.sendall(msg)
@@ -82,6 +101,7 @@ def send_msg_SSL(sock, msg, ca_pem_path):
 
 """
 Verifies an SSL communication on the receiving end against a CA-issued certificate.
+Server-side operation.
 Arg:
     sock (socket.socket)
     cert (str): Path to the certificate file
