@@ -237,7 +237,7 @@ def send_fault_status(sock, faulty, ca_pem_path):
         logger.error(f"{current_function_name} - Unexpected error while sending fault status - {e}")
 
 """
-Receives and unpacks a message over an SSL-secured socket connection.
+Receives and unpacks msg type
 Arg:
     sock (socket.socket)
     cert (str)
@@ -250,8 +250,10 @@ def receive_msg(sock, cert, prikey):
     logger.debug(f"Currently executing: {current_function_name}")
 
     try:
-        msg_type_data = verify_recv(sock, cert, prikey)
+        #msg_type_data = verify_recv(sock, cert, prikey)]
+        msg_type_data = msg_type_data = sock.recv(4)
         if not msg_type_data or len(msg_type_data) != 4:
+            print(f"msg_type_data: {msg_type_data}, {type(msg_type_data)}")
             raise ValueError("Incorrect message length received")
 
         msg_type = struct.unpack('!I', msg_type_data)[0]
