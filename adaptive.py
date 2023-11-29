@@ -32,11 +32,11 @@ def start_algo(faulty, connections, num_connections, node_num):
     FAULTY = faulty
     tested_up = [-1] * constants.NUM_NODES
 
-    # Check if the './test' directory exists
-    test_directory = "./test"
-    if not os.path.exists(test_directory):
-        logger.error(f"{current_function_name} - The '{test_directory}' directory does not exist.")
-        return
+    # # Check if the './test' directory exists
+    # test_directory = "./test"
+    # if not os.path.exists(test_directory):
+    #     logger.error(f"{current_function_name} - The '{test_directory}' directory does not exist.")
+    #     return
 
     server_fd = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -47,31 +47,31 @@ def start_algo(faulty, connections, num_connections, node_num):
     # Start the thread
     threading.Thread(target=receive_thread, args=(server_fd,)).start()
 
-    # Build the initial lookup table
-    files = [f for f in os.listdir(test_directory) if os.path.isfile(os.path.join(test_directory, f))]
-    files = [f for f in files if f not in ['.', '..']]
-    file_count = len(files)
+    # # Build the initial lookup table
+    # files = [f for f in os.listdir(test_directory) if os.path.isfile(os.path.join(test_directory, f))]
+    # files = [f for f in files if f not in ['.', '..']]
+    # file_count = len(files)
 
-    if file_count == 0:
-        logger.warning(f"{current_function_name} - There are no files in the '{test_directory}' directory.")
+    # if file_count == 0:
+    #     logger.warning(f"{current_function_name} - There are no files in the '{test_directory}' directory.")
 
-    logger.debug(f"File count in '{test_directory}' directory: {file_count}")
+    # logger.debug(f"File count in '{test_directory}' directory: {file_count}")
 
-    file_lookup = []
-    for file in files:
-        temp_filename = os.path.join(test_directory, file)
-        entrophy = entropy.calc_entropy_file(temp_filename)
-        file_lookup.append({'filename': temp_filename, 'entropy': entrophy})
+    # file_lookup = []
+    # for file in files:
+    #     temp_filename = os.path.join(test_directory, file)
+    #     entrophy = entropy.calc_entropy_file(temp_filename)
+    #     file_lookup.append({'filename': temp_filename, 'entropy': entrophy})
 
     # Wait for user input to begin testing
     ready = 0
     while not ready:
         ready = int(input("Enter 1 to begin testing other nodes: "))
     
-    threading.Thread(target=adaptive_dsd, args=(faulty, connections, num_connections, node_num, file_lookup)).start()
+    threading.Thread(target=adaptive_dsd, args=(faulty, connections, num_connections, node_num)).start()
 
 
-def adaptive_dsd(faulty, connections, num_connections, node_num, lookup):
+def adaptive_dsd(faulty, connections, num_connections, node_num):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
     logger.debug(f"Currently executing: {current_function_name}")
 
@@ -99,22 +99,13 @@ def adaptive_dsd(faulty, connections, num_connections, node_num, lookup):
 
             if input_value in [0,1]:
                 FAULTY = input_value
-
-            if input_value == 2:
-                diagnosis = diagnose.diagnose(tested_up, node_num)
-                for i in range(constants.NUM_NODES):
-                    if diagnosis[i] == 1:
-                        logger.error(f"{current_function_name} - Node {i} is faulty")
-                    else:
-                        logger.debug(f"{current_function_name} - Node {i} is not faulty")
-            else:
-                print("Invalid input. Enter 1 or 0 to change fault status, or 2 to diagnose.")
+                logger.info(f"Fault status updated to {input_value}")
                 
         if curr_time > constants.TESTING_INTERVAL and not FAULTY:
             logger.info(f"{current_function_name} - Starting the testing now after {constants.TESTING_INTERVAL} seconds. Tested up array - {tested_up}")
             update_arr(connections, num_connections, node_num)
                 
-            detection_status = monitor.run_detection(lookup)
+            detection_status = monitor.run_detection()
             logger.info(f"{current_function_name} - Detection status - {detection_status}")
             # update lookup table
             if not FAULTY and detection_status:

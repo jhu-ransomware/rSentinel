@@ -1,5 +1,6 @@
 import os
 import constants
+import crypto_helper
 from logconfig import get_logger
 
 logger = get_logger(__name__)
@@ -8,7 +9,17 @@ tracked_magic_numbers = {}
 
 def get_magic_number(filename):
     with open(filename, 'rb') as f:
-        return f.read(4)
+        header = f.read(4)
+    
+    # Check for PDF
+    if header.startswith(b'%PDF'):
+        return 'PDF'
+
+    # Check for DOCX (and other ZIP-based file formats like XLSX, PPTX)
+    if header.startswith(b'PK\x03\x04'):
+        return 'DOCX'
+
+    return None
 
 def save_magic_numbers(files):
     for file in files:
@@ -18,30 +29,53 @@ def save_magic_numbers(files):
 def check_magic_numbers():
     global tracked_magic_numbers
 
-    files_to_track = [os.path.join(constants.TEST_DIR, file) for file in os.listdir(constants.TEST_DIR) if os.path.isfile(os.path.join(constants.TEST_DIR, file))]
-    
-    if not tracked_magic_numbers:
-        logger.debug("Saving magic numbers for the first time")
-        save_magic_numbers(files_to_track)
-        logger.debug(f"Magic numbers saved successfully for the first time - {tracked_magic_numbers}")
-        return False  # No changes detected on the first run
+    config_dict = crypto_helper.decrypt_config_file()
+    pdf_paths = [config_dict.get(f"PDF_PATH_{i}", "").strip() for i in range(4)]  # Assuming 4 PDF files
+    # pdf_paths = ["/Users/preethamnagesh8/Documents/JHU MSSI/Capstone Project/rSentinel/test/test.docx"]
+    tampered_pdf_count = 0
 
-    changed_files_count = 0
-    total_files = len(files_to_track)
-
-    for file in files_to_track:
-        current_magic_number = get_magic_number(file).hex()
-        logger.debug(f"Newly calculated magic number of {file} - {current_magic_number}")
-        if file in tracked_magic_numbers:
-            if tracked_magic_numbers[file] != current_magic_number:
-                logger.error(f"WARNING: Magic number for {file} has changed to {current_magic_number}")
-                changed_files_count += 1
-            else:
-                logger.debug(f"Magic number for {file} remains the same.")
+    for i, pdf_path in enumerate(pdf_paths):
+        if not pdf_path:
+            logger.debug(f"PDF file {i} path is missing or empty in the configuration.")
+            tampered_pdf_count += 1
         else:
-            logger.debug(f"Magic number for {file} not found in tracked records.")
+            logger.debug(f"Checking PDF file {i} at path: {pdf_path}")
 
-    return changed_files_count > total_files * 0.5  # Return True if more than 50% of files changed
+            if not os.path.exists(pdf_path):
+                logger.debug(f"PDF file {i} does not exist at path: {pdf_path}")
+                tampered_pdf_count += 1
+            else:
+                magic_number = get_magic_number(pdf_path)
+                logger.debug(f"Magic number for PDF file {i}: {magic_number}")
+
+                if magic_number != 'PDF':
+                    logger.debug(f"PDF file {i} has been tampered with.")
+                    tampered_pdf_count += 1
+
+    
+    docx_paths = [config_dict.get(f"DOCX_PATH_{i}", "").strip() for i in range(6)]  # Assuming 6 DOCX files
+
+    tampered_docx_count = 0
+    for i, docx_path in enumerate(docx_paths):
+        if not docx_path:
+            logger.debug(f"DOCX file {i} path is missing or empty in the configuration.")
+            tampered_docx_count += 1
+        else:
+            logger.debug(f"Checking DOCX file {i} at path: {docx_path}")
+
+            if not os.path.exists(docx_path):
+                logger.debug(f"DOCX file {i} does not exist at path: {docx_path}")
+                tampered_docx_count += 1
+            else:
+                magic_number = get_magic_number(docx_path)
+                logger.debug(f"Magic number for DOC file {i}: {magic_number}")
+
+                if magic_number != 'DOCX':
+                    logger.debug(f"PDF file {i} has been tampered with.")
+                    tampered_docx_count += 1
+
+    total_tampered_count = tampered_pdf_count + tampered_docx_count
+    return total_tampered_count > 5
 
 if __name__ == '__main__':
     result = check_magic_numbers()
