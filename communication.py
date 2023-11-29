@@ -98,15 +98,19 @@ def verify_recv(sock, cert, prikey):
         #ssl_sock.close()
         return None
 
-def request_arr(sock):
+"""
+(1)send REQUEST_MSG = 2 
+(2)recv
+"""
+
+def request_arr(sock, cert, prikey, ca_pem_path):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
     logger.debug(f"Currently executing: {current_function_name}")
 
     req_msg_data = struct.pack('!I', constants.REQUEST_MSG)
-    sock.send(req_msg_data)
+    send_msg_SSL(sock, req_msg_data, ca_pem_path)
 
-    # buffer_data = sock.recv(constants.NUM_NODES * 4)
-    buffer_data = sock.recv(1024)
+    buffer_data = verify_recv(sock, cert, prikey)
 
     arr = [0] * constants.NUM_NODES
     try:
@@ -142,7 +146,8 @@ def send_msg_to_demo_node(node_num, arr):
     sock.close()
 
 
-def send_array(sock, arr):
+# send
+def send_array(sock, arr, ca_pem_path):
 
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
     logger.debug(f"Currently executing: {current_function_name}")
@@ -150,7 +155,7 @@ def send_array(sock, arr):
     buffer = [struct.pack('!i', val) for val in arr]  # Convert integers to network byte order
     buffer_bytes = b''.join(buffer)  # Join the byte arrays to create a single byte string
     try:
-        sock.sendall(buffer_bytes)
+        send_msg_SSL(sock, buffer_bytes, ca_pem_path)
     except socket.error as e:
         print("Error sending tested up:", e)
 
@@ -160,8 +165,8 @@ def hash_string(s):
     logger.debug(f"Currently executing: {current_function_name}")
     return int(hashlib.md5(s.encode()).hexdigest(), 16) % 4294967296
 
-
-def send_fault_status(sock, faulty):
+# send
+def send_fault_status(sock, faulty, ca_pem_path):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
     logger.debug(f"Currently executing: {current_function_name}")
     
@@ -172,16 +177,16 @@ def send_fault_status(sock, faulty):
         status = struct.pack('!I', hash(fault_val, len(constants.NON_FAULTY_VAL)))
 
     try:
-        sock.sendall(status)
+        send_msg_SSL(sock, status, ca_pem_path)
     except socket.error as e:
         logger.error(f"{current_function_name} - Error sending tested up - {e}")
         # print("Error sending tested up:", e)
 
-
+# recv
 def receive_msg(sock):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
     logger.debug(f"Currently executing: {current_function_name}")
-    msg_type_data = sock.recv(4)  # Assuming 4 bytes for an integer, as it is in C
+    msg_type_data = verify_recv(sock, cert, prikey)  # Assuming 4 bytes for an integer, as it is in C
     if len(msg_type_data) != 4:
         raise ConnectionError("Failed to receive all 4 bytes for the message type")
     # msg_type_data = sock.recv(1024)  # Assuming 4 bytes for an integer, as it is in C
@@ -189,7 +194,7 @@ def receive_msg(sock):
     msg_type = struct.unpack('!I', msg_type_data)[0]  # Unpacking the received data
     return msg_type
 
-
+# init socket
 def init_client_to_server(ip_address):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
     logger.debug(f"Currently executing: {current_function_name}")
@@ -226,7 +231,11 @@ def init_demo_socket():
         print("Socket creation/connection error:", err)
         return None
 
-def request_fault_status(sock):
+"""
+(1)send TEST_MSG = 1
+(2)recv
+"""
+def request_fault_status(sock, cert, prikey, ca_pem_path):
 
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
     logger.debug(f"Currently executing: {current_function_name}")
@@ -236,10 +245,10 @@ def request_fault_status(sock):
 
     try:
         test_msg_data = struct.pack('!I', constants.TEST_MSG)  # Pack the TEST_MSG as a 4-byte integer
-        sock.send(test_msg_data)
+        send_msg_SSL(sock, test_msg_data, ca_pem_path)
         logger.debug(f"Test message sent successfully")
 
-        status_data = sock.recv(4)  # Assuming 4 bytes for an integer, as it is in C
+        status_data = verify_recv(sock, cert, prikey)  # Assuming 4 bytes for an integer, as it is in C
         logger.debug(f"Length of the status data: {len(status_data)}")
 
         status = struct.unpack('!I', status_data)[0]  # Unpacking the received data
@@ -255,7 +264,11 @@ def request_fault_status(sock):
         return 0
     return 1
 
-def request_code_integrity_status(sock):
+"""
+(1)send CODE_INTEGRITY_MSG = 3
+(2)recv
+"""
+def request_code_integrity_status(sock, cert, prikey, ca_pem_path):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
     logger.debug(f"Currently executing: {current_function_name}")
     code_integrity_verified = False
@@ -264,10 +277,10 @@ def request_code_integrity_status(sock):
         combined_hash = code_integrity_check.generate_combined_hash()
         logger.info(f"{current_function_name} - Generated combined hash - {combined_hash}")
         test_msg_data = struct.pack('!I', constants.CODE_INTEGRITY_MSG)  # Pack the TEST_MSG as a 4-byte integer
-        sock.send(test_msg_data)
+        send_msg_SSL(sock, test_msg_data, ca_pem_path)
         logger.debug(f"Code integrity message request sent successfully")
 
-        signed_signature = sock.recv(1024)  # Assuming 4 bytes for an integer, as it is in C
+        signed_signature = verify_recv(sock, cert, prikey)  # Assuming 4 bytes for an integer, as it is in C
 
         code_integrity_verified = code_integrity_check.verify_signature(combined_hash, signed_signature)
         
@@ -278,6 +291,7 @@ def request_code_integrity_status(sock):
     finally:
         return code_integrity_verified
 
+# send
 def send_code_integrity_signature(sock):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
     logger.debug(f"Currently executing: {current_function_name}")
@@ -286,7 +300,7 @@ def send_code_integrity_signature(sock):
         combined_hash = os.getenv(constants.COMBINED_HASH_VARIABLE, constants.ENV_VAR_DEFAULT_VALUE)
         logger.info(f"{current_function_name} - Stored combined hash - {combined_hash}")
         signed_hash = code_integrity_check.sign_data(combined_hash)
-        sock.sendall(signed_hash)
+        send_msg_SSL(sock, signed_hash, ca_pem_path)
         logger.debug(f"Code integrity message sent successfully")
     except socket.timeout as e:
         logger.error(f"Socket connection timed out")
