@@ -183,7 +183,7 @@ def send_fault_status(sock, faulty, ca_pem_path):
         # print("Error sending tested up:", e)
 
 # recv
-def receive_msg(sock):
+def receive_msg(sock, cert, prikey):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
     logger.debug(f"Currently executing: {current_function_name}")
     msg_type_data = verify_recv(sock, cert, prikey)  # Assuming 4 bytes for an integer, as it is in C

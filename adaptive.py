@@ -42,6 +42,11 @@ def start_algo(faulty, connections, num_connections, node_num):
     FAULTY = faulty
     tested_up = [-1] * constants.NUM_NODES
 
+    # init cert
+    private_key = crypto.gen_pri_key()
+    csr = crypto.gen_CSR(private_key)
+    communication.req_CSR(CA_addr, CA_port, csr)
+
     # # Check if the './test' directory exists
     # test_directory = "./test"
     # if not os.path.exists(test_directory):
@@ -89,6 +94,7 @@ def adaptive_dsd(faulty, connections, num_connections, node_num):
 
     global FAULTY
     global tested_up
+    global cert
 
     FAULTY = faulty
 
@@ -117,6 +123,13 @@ def adaptive_dsd(faulty, connections, num_connections, node_num):
                 
             detection_status = monitor.run_detection()
             logger.info(f"{current_function_name} - Detection status - {detection_status}")
+
+            # update cert after each round of detection
+            private_key = crypto.gen_pri_key()  # Generate new private key
+            csr = crypto.gen_CSR(private_key)  # Generate CSR using the private key
+            communication.send_flag_to_CA(CA_addr, CA_flag_port, FAULTY)  # Report faulty status to CA
+            communication.req_CSR(CA_addr, CA_port, csr)  # Request cert from CA
+
             # update lookup table
             if not FAULTY and detection_status:
                 FAULTY = 1
@@ -177,23 +190,23 @@ def receiving(server_fd):
                     except Exception as e:
                         logger.error(f"{current_function_name} - Error extracting client details from ready socket - {e}")
                 else:
-                    msg_type = communication.receive_msg(s)
+                    msg_type = communication.receive_msg(s, crt_name, pri_key)
                     if msg_type == constants.TEST_MSG:
                         try:
                             logger.info(f"{current_function_name} - Sending fault status - {FAULTY}")
-                            communication.send_fault_status(s, FAULTY)
+                            communication.send_fault_status(s, FAULTY, ca_pem_path)
                             logger.debug(f"{current_function_name} - Message Type - TEST_MSG - sent fault status successfully")
                         except Exception as e:
                             logger.error(f"{current_function_name} - Message Type - TEST_MSG - Error sending message - {e}")
                     elif msg_type == constants.REQUEST_MSG:
                         try:
-                            communication.send_array(s, tested_up)
+                            communication.send_array(s, tested_up, ca_pem_path)
                             logger.debug(f"{current_function_name} - Message Type - REQUEST_MSG - sent array successfully")
                         except Exception as e:
                             logger.error(f"{current_function_name} - Message Type - REQUEST_MSG - Error sending array - {e}")
                     elif msg_type == constants.CODE_INTEGRITY_MSG:
                         try:
-                            communication.send_code_integrity_signature(s)
+                            communication.send_code_integrity_signature(s, ca_pem_path)
                         except Exception as e:
                             logger.error(f"{current_function_name} - Message Type - CODE_INTEGRITY_MSG - Error sending data - {e}")
                     current_sockets.remove(s)
@@ -221,7 +234,7 @@ def update_arr(connections, num_connections, node_num):
                     logger.error(f"Socket not created to IP: {connections[i]['ip_addr']}")
 
                 logger.debug(f"Socket creation successful to IP: {connections[i]['ip_addr']}")
-                code_integrity_status = communication.request_code_integrity_status(sock)
+                code_integrity_status = communication.request_code_integrity_status(sock, crt_name, pri_key, ca_pem_path)
                 CODE_INTEGRITY_CHECK_FLAG = True
 
                 if not code_integrity_status:
@@ -239,7 +252,7 @@ def update_arr(connections, num_connections, node_num):
                 continue
             
             logger.debug(f"Socket creation successful to IP: {connections[i]['ip_addr']}")
-            fault_status = communication.request_fault_status(sock)
+            fault_status = communication.request_fault_status(sock, crt_name, pri_key, ca_pem_path)
             try:
                 sock.close()
             except Exception as e:
@@ -250,7 +263,7 @@ def update_arr(connections, num_connections, node_num):
                 if sock is None:
                     logger.error(f"Socket not created to IP: {connections[i]['ip_addr']}")
                     continue
-                new_arr = communication.request_arr(sock)
+                new_arr = communication.request_arr(sock, crt_name, pri_key, ca_pem_path)
                 logger.info(f"{current_function_name} - New array value received from {connections[i]['ip_addr']}  - {new_arr}")
                 try:
                     sock.close()
@@ -262,7 +275,7 @@ def update_arr(connections, num_connections, node_num):
                 if sock is None:
                     logger.error(f"Socket not created to IP: {connections[i]['ip_addr']}")
                     continue
-                fault_status = communication.request_fault_status(sock)  # Check fault status again before updating array
+                fault_status = communication.request_fault_status(sock, crt_name, pri_key, ca_pem_path) # Check fault status again before updating array
                 logger.info(f"{current_function_name} - received fault status from {connections[i]['ip_addr']}  - {fault_status}")
                 try:
                     sock.close()
