@@ -253,7 +253,7 @@ def receive_msg(sock, cert, prikey):
         #msg_type_data = verify_recv(sock, cert, prikey)]
         msg_type_data = msg_type_data = sock.recv(4)
         if not msg_type_data or len(msg_type_data) != 4:
-            print(f"msg_type_data: {msg_type_data}, {type(msg_type_data)}")
+            #print(f"msg_type_data: {msg_type_data}, {type(msg_type_data)}")
             raise ValueError("Incorrect message length received")
 
         msg_type = struct.unpack('!I', msg_type_data)[0]

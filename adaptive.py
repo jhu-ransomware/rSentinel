@@ -24,7 +24,7 @@ FAULTY = 1
 CODE_INTEGRITY_CHECK_FLAG = False
 
 # Global variables for CA
-CA_addr = "127.0.0.1"
+CA_addr = "10.0.0.4"
 CA_port = 3000
 CA_flag_port = 3001
 cert = None
@@ -158,6 +158,7 @@ def receive_thread(server_fd):
         logger.error(f"{current_function_name} - Error - {e}")
     finally:
         server_fd.close()
+        print("server_fd closed.")
 
 def receiving(server_fd):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
@@ -242,6 +243,7 @@ def update_arr(connections, num_connections, node_num):
 
                 try:
                     sock.close()
+                    print(f"{current_function_name}: sock closed. try 1")
                 except Exception as e:
                     logger.error(f"{current_function_name} - Failed to close socket which is not alive")
 
@@ -255,6 +257,7 @@ def update_arr(connections, num_connections, node_num):
             fault_status = communication.request_fault_status(sock, crt_name, pri_key, ca_pem_path)
             try:
                 sock.close()
+                print(f"{current_function_name}: sock closed. try 2")
             except Exception as e:
                 logger.error(f"{current_function_name} - Failed to close socket which is not alive")
 
@@ -267,6 +270,7 @@ def update_arr(connections, num_connections, node_num):
                 logger.info(f"{current_function_name} - New array value received from {connections[i]['ip_addr']}  - {new_arr}")
                 try:
                     sock.close()
+                    print(f"{current_function_name}: sock closed. try 3")
                 except Exception as e:
                     logger.error(f"{current_function_name} - Failed to close socket which is not alive")
 
@@ -279,6 +283,7 @@ def update_arr(connections, num_connections, node_num):
                 logger.info(f"{current_function_name} - received fault status from {connections[i]['ip_addr']}  - {fault_status}")
                 try:
                     sock.close()
+                    print(f"{current_function_name}: sock closed. try 4")
                 except Exception as e:
                     logger.error(f"{current_function_name} - Failed to close socket which is not alive")
                 
@@ -293,6 +298,7 @@ def update_arr(connections, num_connections, node_num):
         finally:
             try:
                 sock.close()
+                print(f"{current_function_name}: sock closed. try 5")
             except Exception as e:
                 logger.error(f"{current_function_name} - Failed to close socket which is not alive")
 
