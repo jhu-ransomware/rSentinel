@@ -19,7 +19,7 @@ crt_name = 'node.crt'
 hostnames = {
     '10.0.0.4' : 'node1.c0conut.com',
     '10.0.0.5' : 'node2.c0conut.com',
-    '10.0.0.6' : 'node3.c0conut.com',
+    '10.0.0.6' : 'node3.c0conut.com'
 }
 
 def find_hostname(sock):
