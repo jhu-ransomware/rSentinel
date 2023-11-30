@@ -4,6 +4,7 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.hazmat.primitives.asymmetric import rsa
 import os
+import ipaddress
 
 pri_key = 'pri.key'
 
@@ -37,7 +38,6 @@ input: private_key
 output: csr, if generated; None, if not
 """
 def gen_CSR(private_key):
-    # Create a CSR
     print("Creating CSR...")
     csr = x509.CertificateSigningRequestBuilder().subject_name(x509.Name([
         # CSR info
@@ -45,13 +45,14 @@ def gen_CSR(private_key):
         x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, u"California"),
         x509.NameAttribute(NameOID.LOCALITY_NAME, u"San Francisco"),
         x509.NameAttribute(NameOID.ORGANIZATION_NAME, u"c0conut"),
-        x509.NameAttribute(NameOID.COMMON_NAME, u"node1.c0conut.com"),
+        x509.NameAttribute(NameOID.COMMON_NAME, u"10.0.0.5"),
     ])).add_extension(
-        x509.SubjectAlternativeName([x509.DNSName(u"node1.c0conut.com")]),
+        x509.SubjectAlternativeName([
+            x509.IPAddress(ipaddress.IPv4Address(u"10.0.0.5"))
+        ]),
         critical=False,
-        # Sign the CSR with private key.
     ).sign(private_key, hashes.SHA256())
-    
+
     if isinstance(csr, x509.CertificateSigningRequest):
         print("CSR created.")
         return csr

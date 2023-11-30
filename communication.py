@@ -15,24 +15,16 @@ logger = get_logger(__name__)
 
 pri_key = 'pri.key'
 crt_name = 'node.crt'
-# dict for hostnames
-hostnames = {
-    '10.0.0.4' : 'node1.c0conut.com',
-    '10.0.0.5' : 'node2.c0conut.com',
-    '10.0.0.6' : 'node3.c0conut.com'
-}
 
 def find_hostname(sock):
     #socket should be connected
-    dest_ip = sock.getpeername()[0]
-
-    # Find the hostname using the IP
-    hostname = hostnames.get(dest_ip)
+    hostname = sock.getpeername()[0]
 
     if hostname:
         return hostname
     else:
-        return "Hostname not found for IP: " + dest_ip
+        logger.error("hostname not found.")
+        return None
 
 """
 send the CSR to CA

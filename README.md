@@ -26,17 +26,7 @@ Transmit your CA pem to each of the node.
 
 Config `CA_addr` and `ca_pem_path`, etc in `adaptive` module.
 
-Config `hostnames` in `communication` module. The `hostname` for each node should match the CSR/Cert.
-
-```
-hostnames = {
-    <Node 1 IP> : <Node 1 hostname or IP>,
-    <Node 2 IP> : <Node 2 hostname or IP>,
-    <Node 3 IP> : <Node 3 hostname or IP>
-}
-```
-
-Config the CSR in `crypto.py`.
+Config the CSR in `crypto.py`, make sure *CN* and *SAN* match the IP address of each node.
 
 
 ### Node Count Configuration
