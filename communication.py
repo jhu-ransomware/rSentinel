@@ -113,6 +113,11 @@ def verify_recv(sock, cert, prikey):
     context.load_cert_chain(certfile=cert, keyfile=prikey)
 
     try:
+        # Check if the socket is valid (not closed)
+        if sock.fileno() == -1:
+            logger.error("Socket is closed, cannot receive data.")
+            return None
+
         with context.wrap_socket(sock, server_side=True) as ssl_sock:
             received = ssl_sock.recv(1024)
             return received
