@@ -30,11 +30,14 @@ Config `hostnames` in `communication` module. The `hostname` for each node shoul
 
 ```
 hostnames = {
-    <Node 1 IP> : <Node 1 hostname>,
-    <Node 2 IP> : <Node 2 hostname>,
-    <Node 3 IP> : <Node 3 hostname>
+    <Node 1 IP> : <Node 1 hostname or IP>,
+    <Node 2 IP> : <Node 2 hostname or IP>,
+    <Node 3 IP> : <Node 3 hostname or IP>
 }
 ```
+
+Config the CSR in `crypto.py`.
+
 
 ### Node Count Configuration
 Location (Filename) - constants.py

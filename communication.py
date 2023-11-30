@@ -86,7 +86,7 @@ Arg:
 def send_msg_SSL(sock, msg, ca_pem_path):
     logger.debug(f"Sending message via SSL: {msg}")
 
-    context = ssl.create_default_context()
+    context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
     context.load_verify_locations(ca_pem_path)
 
     hostname = find_hostname(sock)
@@ -255,8 +255,8 @@ def receive_msg(sock, cert, prikey):
     logger.debug(f"Currently executing: {current_function_name}")
 
     try:
-        #msg_type_data = verify_recv(sock, cert, prikey)]
-        msg_type_data = msg_type_data = sock.recv(4)
+        msg_type_data = verify_recv(sock, cert, prikey)
+        #msg_type_data = msg_type_data = sock.recv(4)
         if not msg_type_data or len(msg_type_data) != 4:
             #print(f"msg_type_data: {msg_type_data}, {type(msg_type_data)}")
             raise ValueError("Incorrect message length received")
@@ -288,6 +288,7 @@ def init_client_to_server(ip_address):
     logger.debug(f"Currently executing: {current_function_name}")
 
     try:
+        # TCP
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(constants.SOCKET_TIMEOUT_GLOBAL)
         sock.connect((ip_address, constants.PORT))
