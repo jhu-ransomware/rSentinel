@@ -69,8 +69,8 @@ def calculate_entropy_for_files_in_directory(directories):
 
         total_files = 0  # Initialize the count for successfully processed files
         high_entropy_files = 0
-        threshold_lower = 7.980
-        threshold_upper = 8.000
+        threshold_lower = 7.99900
+        threshold_upper = 8.00000
 
         results = [calc_entropy_file(file) for file in selected_files]
 
