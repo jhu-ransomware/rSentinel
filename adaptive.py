@@ -228,7 +228,7 @@ def update_arr(connections, num_connections, node_num):
     for i in range(num_connections):
         try:
 
-            if not CODE_INTEGRITY_CHECK_FLAG:
+            if not CODE_INTEGRITY_CHECK_FLAG and constants.ENABLE_CODE_INTEGRITY_DETECTION:
                 logger.debug(f"{current_function_name} - Initiating code integrity check")
                 sock = communication.init_client_to_server(connections[i]['ip_addr'])
                 if sock is None:
