@@ -36,7 +36,7 @@ Files larger than this limit will be excluded from entropy calculations.
 Setting this limit helps to reduce computation time and improve system performance.
 For example, to set a limit of 500KB, the value of this variable should be 500.
 """
-ENTROPY_FILE_SIZE_LIMIT = 500
+ENTROPY_FILE_SIZE_LIMIT = 102400
 
 
 """
