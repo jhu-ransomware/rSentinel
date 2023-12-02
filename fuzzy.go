@@ -95,8 +95,8 @@ func checkFilesInDirectory(directory string) int {
 				}
 
 				// Check if 200 files have been processed
-				if totalFileCount == 200 {
-					dissimilarityThreshold := 0.8
+				if totalFileCount == 100 {
+					dissimilarityThreshold := 0.9
 					ratio := float64(dissimilarCount) / float64(totalFileCount)
 					log.Printf("Dissimilar Count: %d, Total File Count: %d\n", dissimilarCount, totalFileCount)
 
