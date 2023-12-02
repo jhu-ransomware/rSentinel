@@ -54,7 +54,31 @@ def gen_CSR(private_key):
 
     if isinstance(csr, x509.CertificateSigningRequest):
         print("CSR created.")
+        #print_csr_info(csr)
         return csr
     else:
         print("CSR creation failed.")
         return None
+
+def print_csr_info(csr):
+    print("\nCSR Information:")
+    print("Subject:", csr.subject)
+    for extension in csr.extensions:
+        print("Extension:", extension.oid._name, extension.value)
+
+def print_cert_info(cert_path):
+    # Load the certificate from the file
+    with open(cert_path, "rb") as cert_file:
+        cert_data = cert_file.read()
+        cert = x509.load_pem_x509_certificate(cert_data, default_backend())
+
+    # Print certificate information
+    print("\nCertificate Information:")
+    print("Issuer:", cert.issuer)
+    print("Subject:", cert.subject)
+    print("Valid From:", cert.not_valid_before)
+    print("Valid To:", cert.not_valid_after)
+    print("Serial Number:", cert.serial_number)
+
+    for extension in cert.extensions:
+        print("Extension:", extension.oid._name, extension.value)
