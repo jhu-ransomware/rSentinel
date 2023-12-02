@@ -18,9 +18,16 @@ cd rSentinel
 
 First, deploy [Baby CA](https://github.com/Crane-Mocker/Baby-CA) as your CA. Generate your private key and CA pem.
 
+```bash
+openssl genrsa -des3 -out CAPri.key 2048
+openssl req -x509 -new -nodes -key CAPri.key -sha256 -days 365 -out CA.pem
+```
+
+Make sure the *CN* of *CA.pem* match your CA's hostname (IP or Domain name). 
+
 Configure `allowed_ips` of *Baby CA*, put the IPs of your nodes here!
 
-Transmit your CA pem to each of the node.
+Transmit your CA pem to each of the node, for example, under `rSentinel/` directory.
 
 ## CA config for Nodes
 
@@ -35,7 +42,20 @@ pri_key = 'pri.key'
 crt_name = 'node.crt'
 ```
 
-Config the *CSR* in `crypto.py`, make sure CN and SAN match the IP address of each node.
+Config the *CSR* in `crypto.py`, make sure *CN(COMMON_NAME)* and *SAN(SubjectAlternativeName)* match the IP address of each node.
+
+```python
+    csr = x509.CertificateSigningRequestBuilder().subject_name(x509.Name([
+        # CSR info
+        x509.NameAttribute(NameOID.COUNTRY_NAME, u"US"),
+        x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, u"California"),
+        x509.NameAttribute(NameOID.LOCALITY_NAME, u"San Francisco"),
+        x509.NameAttribute(NameOID.ORGANIZATION_NAME, u"c0conut"),
+        x509.NameAttribute(NameOID.COMMON_NAME, u"10.0.0.5"),
+    ])).add_extension(
+        x509.SubjectAlternativeName([
+            x509.IPAddress(ipaddress.IPv4Address(u"10.0.0.5"))
+```
 
 ### Node Count Configuration
 Location (Filename) - constants.py
