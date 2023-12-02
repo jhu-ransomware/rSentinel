@@ -108,18 +108,6 @@ func checkFilesInDirectory(directory string) int {
 						return 0
 					}
 				}
-				elif if totalFileCount > 0 and totalFileCount <200 {
-					dissimilarityThreshold := 0.8
-					ratio := float64(dissimilarCount) / float64(totalFileCount)
-					log.Printf("Dissimilar Count: %d, Total File Count: %d\n", dissimilarCount, totalFileCount)
-
-					// Return 1 if the dissimilarity ratio is greater than or equal to the threshold
-					if ratio >= dissimilarityThreshold {
-						return 1
-					} else {
-						// Return 0 if the dissimilarity ratio is below the threshold
-						return 0
-					}
 			}
 		}
 	}
