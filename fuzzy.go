@@ -7,40 +7,61 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sync"
 
 	"github.com/eciavatta/sdhash"
 )
 
 const defaultPath = `C:\Users\rSUser\Documents`
 
-func calculateSimilarity(filename1, filename2 string) (int, error) {
+var mu sync.Mutex
+
+func calculateSimilarity(filename1, filename2 string, wg *sync.WaitGroup, ch chan int) {
+	defer wg.Done()
+
 	factoryA, err := sdhash.CreateSdbfFromFilename(filename1)
 	if err != nil {
-		return 0, err
+		log.Printf("Error creating sdbf for %s: %v\n", filename1, err)
+		ch <- 0
+		return
 	}
 	sdbfA := factoryA.Compute()
 
 	factoryB, err := sdhash.CreateSdbfFromFilename(filename2)
 	if err != nil {
-		return 0, err
+		log.Printf("Error creating sdbf for %s: %v\n", filename2, err)
+		ch <- 0
+		return
 	}
 	sdbfB := factoryB.Compute()
 
-	return sdbfA.Compare(sdbfB), nil
+	result, err := sdbfA.Compare(sdbfB)
+	if err != nil {
+		log.Printf("Error comparing %s and %s: %v\n", filename1, filename2, err)
+		ch <- 0
+		return
+	}
+
+	mu.Lock()
+	defer mu.Unlock()
+
+	if result >= 0 && result <= 2 {
+		log.Printf("Dissimilarity between %s and %s: %d\n", filename1, filename2, result)
+		ch <- 1
+	} else {
+		ch <- 0
+	}
 }
 
 func checkFilesInDirectory(directory string) int {
-	// Check if the directory exists
 	if _, err := os.Stat(directory); os.IsNotExist(err) {
 		log.Printf("Error: Directory %s does not exist.\n", directory)
 		os.Exit(1)
 	}
+
 	dissimilarCount := 0
 	totalFileCount := 0
-	// Create a map to store similar file names
 	similarFiles := make(map[string][]string)
-
-	// Define a regular expression to extract base name
 	baseNameRegex := regexp.MustCompile(`^(.+?)\..+?$`)
 
 	err := filepath.WalkDir(directory, func(path string, d fs.DirEntry, errWalk error) error {
@@ -70,6 +91,9 @@ func checkFilesInDirectory(directory string) int {
 
 	processedPairs := make(map[string]bool)
 
+	var wg sync.WaitGroup
+	ch := make(chan int, 200)
+
 	for _, files := range similarFiles {
 		if len(files) < 2 {
 			log.Println("Skipping group with less than two files.")
@@ -87,42 +111,38 @@ func checkFilesInDirectory(directory string) int {
 
 					log.Printf("Checking similarity between %s and %s\n", pathA, files[j])
 
-					similarity, errSimilarity := calculateSimilarity(pathA, files[j])
-					if errSimilarity != nil {
-						log.Println("Error calculating similarity:", errSimilarity)
-						continue
-					}
-
-					totalFileCount++
-
-					if similarity >= 0 && similarity <= 2 {
-						log.Printf("Dissimilarity between %s and %s: %d\n", pathA, files[j], similarity)
-						dissimilarCount++
-					}
-
-					// Check if 200 files have been processed
-					if totalFileCount == 200 {
-						dissimilarityThreshold := 0.6
-						ratio := float64(dissimilarCount) / float64(totalFileCount)
-						log.Printf("Dissimilar Count: %d, Total File Count: %d\n", dissimilarCount, totalFileCount)
-
-						// Return 1 if the dissimilarity ratio is greater than or equal to the threshold
-						if ratio >= dissimilarityThreshold {
-							return 1
-						}
-					}
+					wg.Add(1)
+					go calculateSimilarity(pathA, files[j], &wg, ch)
 				}
 			}
 		}
 	}
 
-	// Check if the ratio is greater than or equal to the threshold for less than 200 files
+	go func() {
+		wg.Wait()
+		close(ch)
+	}()
+
+	for result := range ch {
+		totalFileCount++
+		dissimilarCount += result
+
+		if totalFileCount == 200 {
+			dissimilarityThreshold := 0.6
+			ratio := float64(dissimilarCount) / float64(totalFileCount)
+			log.Printf("Dissimilar Count: %d, Total File Count: %d\n", dissimilarCount, totalFileCount)
+
+			if ratio >= dissimilarityThreshold {
+				return 1
+			}
+		}
+	}
+
 	if totalFileCount > 0 {
 		dissimilarityThreshold := 0.6
 		ratio := float64(dissimilarCount) / float64(totalFileCount)
 		log.Printf("Dissimilar Count: %d, Total File Count: %d\n", dissimilarCount, totalFileCount)
 
-		// Return 1 if the dissimilarity ratio is greater than or equal to the threshold
 		if ratio >= dissimilarityThreshold {
 			return 1
 		}
