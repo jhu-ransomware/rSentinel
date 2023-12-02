@@ -2,31 +2,48 @@ package main
 
 import (
 	"fmt"
-	"io/fs"
 	"log"
+	"math/rand"
 	"os"
-	"path/filepath"
 	"regexp"
+	"runtime"
+	"sync"
+	"sync/atomic"
+	"time"
 
 	"github.com/eciavatta/sdhash"
 )
 
 const defaultPath = `C:\Users\rSUser\Documents`
+const sampleSize = 100    // Adjust the sample size as needed
+const maxTotalFiles = 200 // Maximum total files to check
 
-func calculateSimilarity(filename1, filename2 string) (int, error) {
+func calculateSimilarity(filename1, filename2 string, wg *sync.WaitGroup, resultChan chan<- int) {
+	defer wg.Done()
+
 	factoryA, err := sdhash.CreateSdbfFromFilename(filename1)
 	if err != nil {
-		return 0, err
+		log.Printf("Error creating Sdbf for %s: %v\n", filename1, err)
+		resultChan <- 0 // Signal that an error occurred
+		return
 	}
 	sdbfA := factoryA.Compute()
 
 	factoryB, err := sdhash.CreateSdbfFromFilename(filename2)
 	if err != nil {
-		return 0, err
+		log.Printf("Error creating Sdbf for %s: %v\n", filename2, err)
+		resultChan <- 0 // Signal that an error occurred
+		return
 	}
 	sdbfB := factoryB.Compute()
 
-	return sdbfA.Compare(sdbfB), nil
+	similarity := sdbfA.Compare(sdbfB)
+
+	if similarity >= 0 && similarity <= 2 {
+		resultChan <- 1 // Signal that a dissimilar pair is found
+	} else {
+		resultChan <- 0 // Signal that the pair is not dissimilar
+	}
 }
 
 func checkFilesInDirectory(directory string) int {
@@ -35,104 +52,91 @@ func checkFilesInDirectory(directory string) int {
 		log.Printf("Error: Directory %s does not exist.\n", directory)
 		os.Exit(1)
 	}
-	dissimilarCount := 0
-	totalFileCount := 0
+
 	// Create a map to store similar file names
 	similarFiles := make(map[string][]string)
 
 	// Define a regular expression to extract base name
 	baseNameRegex := regexp.MustCompile(`^(.+?)\..+?$`)
 
-	err := filepath.WalkDir(directory, func(path string, d fs.DirEntry, errWalk error) error {
-		if errWalk != nil {
-			// log.Printf("Error accessing %s: %v\n", path, errWalk)
-			return nil
-		}
-		if !d.IsDir() {
-			// Get the base name without considering multiple extensions
-			baseName := baseNameRegex.ReplaceAllString(d.Name(), "$1")
+	var wg sync.WaitGroup
+	resultChan := make(chan int)
 
-			// Log the base name and extension for debugging
-			// log.Printf("File: %s, Base Name: %s\n", d.Name(), baseName)
+	// Randomly sample files for comparison
+	rand.Seed(time.Now().UnixNano())
+	totalFiles := 0 // Counter for the total number of files checked
 
-			// Add the file to the similarFiles map
-			similarFiles[baseName] = append(similarFiles[baseName], path)
-
-			// Get the file info
-			fileInfo, errFileInfo := d.Info()
-			if errFileInfo != nil {
-				// log.Printf("Error getting file info for %s: %v\n", path, errFileInfo)
-				return nil
-			}
-
-			// Skip files smaller than 20 KB or larger than 200 MB
-			if fileInfo.Size() < 20*1024 || fileInfo.Size() > 200*1024*1024 {
-				// log.Printf("Skipping file %s due to size restrictions (size: %d bytes)\n", path, fileInfo.Size())
-				return nil
-			}
-		}
-		return nil
-	})
-
-	if err != nil {
-		// log.Printf("Error walking the directory: %v\n", err)
-		return -1
-	}
-
-	// Processed pairs map for tracking
-	processedPairs := make(map[string]bool)
-
-	// Iterate over the similarFiles map
 	for _, files := range similarFiles {
-		if len(files) < 2 {
-			// Skip groups with only one file
-			log.Println("Skipping group with less than two files.")
-			continue
-		}
+		if len(files) >= 2 {
+			sample := make([]string, sampleSize)
+			for i := 0; i < sampleSize; i++ {
+				sample[i] = files[rand.Intn(len(files))]
+			}
 
-		log.Println("Starting similarity checks...")
+			for i, pathA := range sample {
+				for j := i + 1; j < len(sample); j++ {
+					// Increment the total files counter
+					atomic.AddInt32(&totalFiles, 1)
 
-		for i, pathA := range files {
-			for j := i + 1; j < len(files); j++ {
-				// Generate a unique key for the pair
-				pairKey := fmt.Sprintf("%s|%s", pathA, files[j])
+					wg.Add(1)
+					go func(pathA, pathB string) {
+						defer wg.Done()
 
-				// Check if the pair has already been processed
-				if _, processed := processedPairs[pairKey]; !processed {
-					processedPairs[pairKey] = true
+						similarity, err := calculateSimilarity(pathA, pathB)
+						if err != nil {
+							log.Println("Error calculating similarity:", err)
+							return
+						}
 
-					// Log the files being checked
-					log.Printf("Checking similarity between %s and %s\n", pathA, files[j])
+						if similarity >= 0 && similarity <= 2 {
+							resultChan <- 1 // Signal that a dissimilar pair is found
+						} else {
+							resultChan <- 0 // Signal that the pair is not dissimilar
+						}
+					}(pathA, sample[j])
 
-					// Compare a and b file names
-					similarity, errSimilarity := calculateSimilarity(pathA, files[j])
-					if errSimilarity != nil {
-						log.Println("Error calculating similarity:", errSimilarity)
-						// Handle the error as needed (e.g., return, continue with the next pair, etc.)
-						continue
-					}
-
-					// log.Printf("Similarity between %s and %s: %d\n", pathA, files[j], similarity)
-					totalFileCount++ // Increment totalFileCount for every pair of files compared
-
-					if similarity >= 0 && similarity <= 2 {
-						log.Printf("Dissimilarity between %s and %s: %d\n", pathA, files[j], similarity)
-						dissimilarCount++
+					// Check if the maximum total files is reached
+					if atomic.LoadInt32(&totalFiles) >= maxTotalFiles {
+						break
 					}
 				}
+
+				// Check if the maximum total files is reached
+				if atomic.LoadInt32(&totalFiles) >= maxTotalFiles {
+					break
+				}
 			}
+
+			// Check if the maximum total files is reached
+			if atomic.LoadInt32(&totalFiles) >= maxTotalFiles {
+				break
+			}
+		}
+	}
+
+	go func() {
+		wg.Wait()
+		close(resultChan)
+	}()
+
+	dissimilarCount := 0
+	for result := range resultChan {
+		if result == 1 {
+			dissimilarCount++
 		}
 	}
 
 	dissimilarityThreshold := 0.6
-	log.Printf("Dissimilar Count: %d, Total File Count: %d\n", dissimilarCount, totalFileCount)
-	if float64(dissimilarCount)/float64(totalFileCount) >= dissimilarityThreshold {
+	log.Printf("Dissimilar Count: %d, Sample Size: %d\n", dissimilarCount, sampleSize)
+	if float64(dissimilarCount)/float64(sampleSize) >= dissimilarityThreshold {
 		return 1
 	}
 	return 0
 }
 
 func main() {
+	runtime.GOMAXPROCS(runtime.NumCPU()) // Utilize all available CPU cores
+
 	// Use the default path if no command-line argument is provided
 	directory := defaultPath
 
