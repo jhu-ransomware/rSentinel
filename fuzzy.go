@@ -69,8 +69,6 @@ func checkFilesInDirectory(directory string) int {
 		return -1
 	}
 
-	processedPairs := make(map[string]bool)
-
 	for _, files := range similarFiles {
 		if len(files) < 2 {
 			log.Println("Skipping group with less than two files.")
@@ -81,54 +79,40 @@ func checkFilesInDirectory(directory string) int {
 
 		for i, pathA := range files {
 			for j := i + 1; j < len(files); j++ {
-				pairKey := fmt.Sprintf("%s|%s", pathA, files[j])
+				log.Printf("Checking similarity between %s and %s\n", pathA, files[j])
 
-				if _, processed := processedPairs[pairKey]; !processed {
-					processedPairs[pairKey] = true
+				similarity, errSimilarity := calculateSimilarity(pathA, files[j])
+				if errSimilarity != nil {
+					log.Println("Error calculating similarity:", errSimilarity)
+					continue
+				}
 
-					log.Printf("Checking similarity between %s and %s\n", pathA, files[j])
+				totalFileCount++
 
-					similarity, errSimilarity := calculateSimilarity(pathA, files[j])
-					if errSimilarity != nil {
-						log.Println("Error calculating similarity:", errSimilarity)
-						continue
-					}
+				if similarity >= 0 && similarity <= 2 {
+					log.Printf("Dissimilarity between %s and %s: %d\n", pathA, files[j], similarity)
+					dissimilarCount++
+				}
 
-					totalFileCount++
+				// Check if 200 files have been processed
+				if totalFileCount == 200 {
+					dissimilarityThreshold := 0.8
+					ratio := float64(dissimilarCount) / float64(totalFileCount)
+					log.Printf("Dissimilar Count: %d, Total File Count: %d\n", dissimilarCount, totalFileCount)
 
-					if similarity >= 0 && similarity <= 2 {
-						log.Printf("Dissimilarity between %s and %s: %d\n", pathA, files[j], similarity)
-						dissimilarCount++
-					}
-
-					// Check if 200 files have been processed
-					if totalFileCount == 200 {
-						dissimilarityThreshold := 0.8
-						ratio := float64(dissimilarCount) / float64(totalFileCount)
-						log.Printf("Dissimilar Count: %d, Total File Count: %d\n", dissimilarCount, totalFileCount)
-
-						// Return 1 if the dissimilarity ratio is greater than or equal to the threshold
-						if ratio >= dissimilarityThreshold {
-							return 1
-						}
+					// Return 1 if the dissimilarity ratio is greater than or equal to the threshold
+					if ratio >= dissimilarityThreshold {
+						return 1
+					} else {
+						// Return 0 if the dissimilarity ratio is below the threshold
+						return 0
 					}
 				}
 			}
 		}
 	}
 
-	// Check if the ratio is greater than or equal to the threshold for less than 200 files
-	if totalFileCount > 0 {
-		dissimilarityThreshold := 0.8
-		ratio := float64(dissimilarCount) / float64(totalFileCount)
-		log.Printf("Dissimilar Count: %d, Total File Count: %d\n", dissimilarCount, totalFileCount)
-
-		// Return 1 if the dissimilarity ratio is greater than or equal to the threshold
-		if ratio >= dissimilarityThreshold {
-			return 1
-		}
-	}
-
+	// Return 0 if the dissimilarity ratio is below the threshold after processing all files
 	return 0
 }
 
