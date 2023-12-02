@@ -42,7 +42,7 @@ func checkFilesInDirectory(directory string) int {
 	similarFiles := make(map[string][]string)
 
 	// Define a regular expression to extract base name
-	baseNameRegex := regexp.MustCompile(`^(.+?)\..+?$`)
+	baseNameRegex := regexp.MustCompile(`^(.+)\.[^.]+$`)
 
 	err := filepath.WalkDir(directory, func(path string, d fs.DirEntry, errWalk error) error {
 		if errWalk != nil {
