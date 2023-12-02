@@ -4,47 +4,29 @@ import (
 	"fmt"
 	"io/fs"
 	"log"
-	"math/rand"
 	"os"
 	"path/filepath"
-	"runtime"
-	"sync"
-	"sync/atomic"
-	"time"
+	"regexp"
 
 	"github.com/eciavatta/sdhash"
 )
 
-const defaultPath = `C:\Users\rSUser\Documents` // Windows path
-const sampleSize = 100                          // Adjust the sample size as needed
-const maxTotalFiles = 200                       // Maximum total files to check
+const defaultPath = `C:\Users\RWareUser\Documents`
 
-func calculateSimilarity(filename1, filename2 string, wg *sync.WaitGroup, resultChan chan<- int) {
-	defer wg.Done()
-
+func calculateSimilarity(filename1, filename2 string) (int, error) {
 	factoryA, err := sdhash.CreateSdbfFromFilename(filename1)
 	if err != nil {
-		log.Printf("Error creating Sdbf for %s: %v\n", filename1, err)
-		resultChan <- 0 // Signal that an error occurred
-		return
+		return 0, err
 	}
 	sdbfA := factoryA.Compute()
 
 	factoryB, err := sdhash.CreateSdbfFromFilename(filename2)
 	if err != nil {
-		log.Printf("Error creating Sdbf for %s: %v\n", filename2, err)
-		resultChan <- 0 // Signal that an error occurred
-		return
+		return 0, err
 	}
 	sdbfB := factoryB.Compute()
 
-	similarity := sdbfA.Compare(sdbfB)
-
-	if similarity >= 0 && similarity <= 2 {
-		resultChan <- 1 // Signal that a dissimilar pair is found
-	} else {
-		resultChan <- 0 // Signal that the pair is not dissimilar
-	}
+	return sdbfA.Compare(sdbfB), nil
 }
 
 func checkFilesInDirectory(directory string) int {
@@ -53,105 +35,104 @@ func checkFilesInDirectory(directory string) int {
 		log.Printf("Error: Directory %s does not exist.\n", directory)
 		os.Exit(1)
 	}
-
-	// Convert the path separators to the appropriate format for the current OS
-	directory = filepath.FromSlash(directory)
-
+	dissimilarCount := 0
+	totalFileCount := 0
 	// Create a map to store similar file names
 	similarFiles := make(map[string][]string)
 
-	// Define a regular expression to extract base name (considering both Windows and Linux paths)
-	var wg sync.WaitGroup
-	resultChan := make(chan int)
-
-	// Randomly sample files for comparison
-	rand.Seed(time.Now().UnixNano())
-	var totalFiles int32 // Counter for the total number of files checked
+	// Define a regular expression to extract base name
+	baseNameRegex := regexp.MustCompile(`^(.+?)\..+?$`)
 
 	err := filepath.WalkDir(directory, func(path string, d fs.DirEntry, errWalk error) error {
 		if errWalk != nil {
-			// log.Printf("Error accessing %s: %v\n", path, errWalk)
 			return nil
 		}
 		if !d.IsDir() {
-			// Get the base name without considering multiple separators
-			similarFiles[d.Name()] = append(similarFiles[d.Name()], path)
+			baseName := baseNameRegex.ReplaceAllString(d.Name(), "$1")
+
+			similarFiles[baseName] = append(similarFiles[baseName], path)
+
+			fileInfo, errFileInfo := d.Info()
+			if errFileInfo != nil {
+				return nil
+			}
+
+			if fileInfo.Size() < 20*1024 || fileInfo.Size() > 200*1024*1024 {
+				return nil
+			}
 		}
 		return nil
 	})
 
 	if err != nil {
-		log.Printf("Error walking the directory: %v\n", err)
 		return -1
 	}
 
+	processedPairs := make(map[string]bool)
+
 	for _, files := range similarFiles {
-		if len(files) >= 2 {
-			sample := make([]string, sampleSize)
-			for i := 0; i < sampleSize; i++ {
-				sample[i] = files[rand.Intn(len(files))]
-			}
+		if len(files) < 2 {
+			log.Println("Skipping group with less than two files.")
+			continue
+		}
 
-			for i, pathA := range sample {
-				for j := i + 1; j < len(sample); j++ {
-					// Increment the total files counter
-					atomic.AddInt32(&totalFiles, 1)
+		log.Println("Starting similarity checks...")
 
-					wg.Add(1)
-					go calculateSimilarity(pathA, sample[j], &wg, resultChan)
+		for i, pathA := range files {
+			for j := i + 1; j < len(files); j++ {
+				pairKey := fmt.Sprintf("%s|%s", pathA, files[j])
 
-					// Check if the maximum total files is reached
-					if atomic.LoadInt32(&totalFiles) >= maxTotalFiles {
-						break
+				if _, processed := processedPairs[pairKey]; !processed {
+					processedPairs[pairKey] = true
+
+					log.Printf("Checking similarity between %s and %s\n", pathA, files[j])
+
+					similarity, errSimilarity := calculateSimilarity(pathA, files[j])
+					if errSimilarity != nil {
+						log.Println("Error calculating similarity:", errSimilarity)
+						continue
+					}
+
+					totalFileCount++
+
+					if similarity >= 0 && similarity <= 2 {
+						log.Printf("Dissimilarity between %s and %s: %d\n", pathA, files[j], similarity)
+						dissimilarCount++
+					}
+
+					// Check if 200 files have been processed
+					if totalFileCount == 200 {
+						dissimilarityThreshold := 0.6
+						ratio := float64(dissimilarCount) / float64(totalFileCount)
+						log.Printf("Dissimilar Count: %d, Total File Count: %d\n", dissimilarCount, totalFileCount)
+
+						// Return 1 if the dissimilarity ratio is greater than or equal to the threshold
+						if ratio >= dissimilarityThreshold {
+							return 1
+						}
 					}
 				}
-
-				// Check if the maximum total files is reached
-				if atomic.LoadInt32(&totalFiles) >= maxTotalFiles {
-					break
-				}
-			}
-
-			// Check if the maximum total files is reached
-			if atomic.LoadInt32(&totalFiles) >= maxTotalFiles {
-				break
 			}
 		}
 	}
 
-	go func() {
-		wg.Wait()
-		close(resultChan)
-	}()
+	// Check if the ratio is greater than or equal to the threshold for less than 200 files
+	if totalFileCount > 0 {
+		dissimilarityThreshold := 0.6
+		ratio := float64(dissimilarCount) / float64(totalFileCount)
+		log.Printf("Dissimilar Count: %d, Total File Count: %d\n", dissimilarCount, totalFileCount)
 
-	dissimilarCount := 0
-	for result := range resultChan {
-		if result == 1 {
-			dissimilarCount++
+		// Return 1 if the dissimilarity ratio is greater than or equal to the threshold
+		if ratio >= dissimilarityThreshold {
+			return 1
 		}
 	}
 
-	dissimilarityThreshold := 0.6
-	log.Printf("Dissimilar Count: %d, Sample Size: %d\n", dissimilarCount, sampleSize)
-	if float64(dissimilarCount)/float64(sampleSize) >= dissimilarityThreshold {
-		return 1
-	}
 	return 0
 }
 
 func main() {
-	runtime.GOMAXPROCS(runtime.NumCPU()) // Utilize all available CPU cores
-
-	// Use the default path if no command-line argument is provided
 	directory := defaultPath
-
-	// Alternatively, you can check if a command-line argument is provided and use it if available
-	// if len(os.Args) == 2 {
-	// 	directory = os.Args[1]
-	// }
-
 	result := checkFilesInDirectory(directory)
-
-	// Print the result instead of using os.Exit
 	fmt.Printf("Result: %d\n", result)
 }
