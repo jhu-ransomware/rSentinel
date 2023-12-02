@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io/fs"
 	"log"
 	"math/rand"
 	"os"
@@ -69,25 +68,7 @@ func checkFilesInDirectory(directory string) int {
 
 	// Randomly sample files for comparison
 	rand.Seed(time.Now().UnixNano())
-	totalFiles := 0 // Counter for the total number of files checked
-
-	err := filepath.WalkDir(directory, func(path string, d fs.DirEntry, errWalk error) error {
-		if errWalk != nil {
-			// log.Printf("Error accessing %s: %v\n", path, errWalk)
-			return nil
-		}
-		if !d.IsDir() {
-			// Get the base name without considering multiple separators
-			baseName := baseNameRegex.ReplaceAllString(d.Name(), "$1")
-			similarFiles[baseName] = append(similarFiles[baseName], path)
-		}
-		return nil
-	})
-
-	if err != nil {
-		log.Printf("Error walking the directory: %v\n", err)
-		return -1
-	}
+	var totalFiles int32 // Counter for the total number of files checked
 
 	for _, files := range similarFiles {
 		if len(files) >= 2 {
