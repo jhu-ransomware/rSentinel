@@ -1,12 +1,4 @@
 # Constants
-
-CA_addr = "10.0.0.7"
-CA_port = 3000
-CA_flag_port = 3001
-ca_pem_path = "CA.pem"
-pri_key = 'pri.key'
-crt_name = 'node.crt'
-
 IP_LENGTH = 16
 PORT = 10100
 DEMO_PORT = 10200
