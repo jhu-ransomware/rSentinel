@@ -14,20 +14,29 @@ cd rSentinel
 
 ## Configuration
 
-### CA
+## CA
 
-First, deploy [Baby CA](https://github.com/Crane-Mocker/Baby-CA) as your CA. Generate your private key and CA pem. 
+First, deploy [Baby CA](https://github.com/Crane-Mocker/Baby-CA) as your CA. Generate your private key and CA pem.
+
 
 Configure `allowed_ips` of *Baby CA*, put the IPs of your nodes here!
 
 Transmit your CA pem to each of the node.
 
-### Node CA Config
+## CA config for Nodes
 
-Config `CA_addr` and `ca_pem_path`, etc in `adaptive` module.
+Config CA address etc, at `constants.py`. For example:
 
-Config the CSR in `crypto.py`, make sure *CN* and *SAN* match the IP address of each node.
+```python
+CA_addr = "10.0.0.7"
+CA_port = 3000
+CA_flag_port = 3001
+ca_pem_path = "CA.pem"
+pri_key = 'pri.key'
+crt_name = 'node.crt'
+```
 
+Config the *CSR* in `crypto.py`, make sure CN and SAN match the IP address of each node.
 
 ### Node Count Configuration
 Location (Filename) - constants.py
@@ -82,7 +91,7 @@ setx RSENTINEL_COMBINED_HASH "f50a4dd5436579c528492ca17b7696363e9d3f6efd99257fa3
 
 ## Execution
 
-To use *Baby CA* with *rSentinel*, start *Baby CA* in flag mode: 
+To use *Baby CA* with *rSentinel*, start *Baby CA* in flag mode:
 
 ```bash
 python Baby-CA.py -f

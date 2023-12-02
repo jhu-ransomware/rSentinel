@@ -10,31 +10,19 @@ import os
 from logconfig import get_logger
 from cryptography.hazmat.primitives import serialization
 import ssl
+import crypto
 
 logger = get_logger(__name__)
-
-pri_key = 'pri.key'
-crt_name = 'node.crt'
-
-def find_hostname(sock):
-    #socket should be connected
-    hostname = sock.getpeername()[0]
-
-    if hostname:
-        return hostname
-    else:
-        logger.error("hostname not found.")
-        return None
 
 """
 send the CSR to CA
 """
-def req_CSR(CA_addr, CA_port, csr):
+def req_CSR(csr):
     if csr != None:
         # Send the CSR to the Baby CA
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             # Connect to server and send data
-            sock.connect((CA_addr, CA_port))
+            sock.connect((constants.CA_addr, constants.CA_port))
             print("Sending CSR...")
             sock.sendall(csr.public_bytes(serialization.Encoding.PEM))
             print("CSR sent!")
@@ -42,253 +30,36 @@ def req_CSR(CA_addr, CA_port, csr):
             # Receive data from the server and shut down
             received = sock.recv(2048)
             if len(received) > 20: # fail: 15
+                if os.path.exists(constants.crt_name):
+                    os.remove(constants.crt_name)
 
-                if os.path.exists(crt_name):
-                    os.remove(crt_name)
-
-                with open(crt_name, 'wb') as f:
+                with open(constants.crt_name, 'wb') as f:
                     f.write(received)
 
-                print(f"Certificate saved as {crt_name}")  
+                print(f"Certificate saved as {constants.crt_name}") 
+                #crypto.print_cert_info(constants.crt_name)
             else:
                 print("Din't receive Certificate from Baby CA!")
-
 """
 Send flag value to CA if node is faulty
 Arg: 
-    CA_addr
-    CA port
     faulty (bool)
 """
-def send_flag_to_CA(CA_addr, CA_flag_port, faulty):
+def send_flag_to_CA(faulty):
     # only send if node is in faulty status
     if faulty:
         print("Node in faulty status. Report to CA.")
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-            sock.connect((CA_addr, CA_flag_port))
+            sock.connect((constants.CA_addr, constants.CA_flag_port))
             sock.send(b'1\n')
 
 """
-Sends message with SSL socket. Client-side operation.
-Arg: 
-    sock (socket.socket)
-    msg (bytes)
-    ca_pem_path (str): Path to the CA PEM file
+hash
 """
-def send_msg_SSL(sock, msg, ca_pem_path):
-    logger.debug(f"Sending message via SSL: {msg}")
-
-    context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
-    context.load_verify_locations(ca_pem_path)
-
-    hostname = find_hostname(sock)
-
-    try:
-        with context.wrap_socket(sock, server_hostname=hostname) as ssl_sock:
-            ssl_sock.sendall(msg)
-    except ssl.SSLError as ssl_err:
-        logger.error(f"SSL error while sending message: {ssl_err}")
-    except socket.error as sock_err:
-        logger.error(f"Socket error while sending message: {sock_err}")
-
-"""
-Verifies an SSL communication on the receiving end against a CA-issued certificate.
-Server-side operation.
-Arg:
-    sock (socket.socket)
-    cert (str): Path to the certificate file
-    prikey (str): Path to the private key file
-Ret: (bytes) or None
-"""
-def verify_recv(sock, cert, prikey):
-    context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-    context.load_cert_chain(certfile=cert, keyfile=prikey)
-
-    try:
-        # Check if the socket is valid (not closed)
-        if sock.fileno() == -1:
-            logger.error("Socket is closed, cannot receive data.")
-            return None
-
-        with context.wrap_socket(sock, server_side=True) as ssl_sock:
-            received = ssl_sock.recv(1024)
-            return received
-    except ssl.SSLError as ssl_err:
-        logger.error(f"SSL verification failed. SSL error: {ssl_err}")
-    except socket.error as sock_err:
-        logger.error(f"Socket error in verify_recv: {sock_err}")
-    except Exception as e:
-        logger.error(f"General error in verify_recv: {e}")
-    return None
-
-"""
-Sends a request message and receives an array
-Arg:
-    sock (socket.socket)
-    cert (str)
-    prikey (str)
-    ca_pem_path (str)
-Ret: (list)
-"""
-def request_arr(sock, cert, prikey, ca_pem_path):
-    current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
-    logger.debug(f"Currently executing: {current_function_name}")
-
-    req_msg_data = struct.pack('!I', constants.REQUEST_MSG)
-    send_msg_SSL(sock, req_msg_data, ca_pem_path)
-
-    try:
-        buffer_data = verify_recv(sock, cert, prikey)
-        if buffer_data and len(buffer_data) == constants.NUM_NODES * 4:
-            arr = list(struct.unpack('!' + 'i' * constants.NUM_NODES, buffer_data))
-            logger.debug(f"{current_function_name} - Received array - {arr}")
-            return arr
-        else:
-            logger.error(f"{current_function_name} - Incorrect data length received or no data.")
-            return []
-    except struct.error as e:
-        logger.error(f"{current_function_name} - Error unpacking received socket data - {e}")
-    except Exception as e:
-        logger.error(f"{current_function_name} - Unexpected error - {e}")
-        return []
-
-
-def send_msg_to_demo_node(node_num, arr):
-    current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
-    logger.debug(f"Currently executing: {current_function_name}")
-
-    sock = init_demo_socket()
-    if sock is None:
-        print("Issue creating a socket")
-        return
-
-    buffer_size = len(arr)
-    buffer_data = b''.join(struct.pack('!I', x) for x in arr)
-
-    print(f"buffer size: {buffer_size}")
-    for i in range(buffer_size):
-        print(struct.unpack('!I', buffer_data[i*4:i*4+4])[0])
-
-    try:
-        sock.send(buffer_data)
-    except socket.error as e:
-        print(f"Error sending demo array: {e}")
-
-    sock.close()
-
-
-"""
-Sends an array of integers over an SSL-secured socket connection.
-Arg:
-    sock (socket.socket)
-    arr (list of int)
-    ca_pem_path (str)
-"""
-def send_array(sock, arr, ca_pem_path):
-    current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
-    logger.debug(f"Currently executing: {current_function_name}")
-
-    try:
-        # Convert the array to bytes in network byte order
-        buffer_bytes = b''.join(struct.pack('!i', val) for val in arr)
-        send_msg_SSL(sock, buffer_bytes, ca_pem_path)
-        logger.debug(f"Array sent successfully: {arr}")
-    except struct.error as e:
-        logger.error(f"{current_function_name} - Error in packing array data - {e}")
-    except socket.error as e:
-        logger.error(f"{current_function_name} - Socket error while sending array - {e}")
-    except ssl.SSLError as ssl_err:
-        logger.error(f"{current_function_name} - SSL error while sending array - {ssl_err}")
-    except Exception as e:
-        logger.error(f"{current_function_name} - Unexpected error while sending array - {e}")
-
 def hash_string(s):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
     logger.debug(f"Currently executing: {current_function_name}")
     return int(hashlib.md5(s.encode()).hexdigest(), 16) % 4294967296
-
-"""
-Sends a fault status over an SSL-secured socket connection.
-Arg:
-    sock (socket.socket)
-    faulty (bool)
-    ca_pem_path (str)
-"""
-def send_fault_status(sock, faulty, ca_pem_path):
-    current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
-    logger.debug(f"Currently executing: {current_function_name}")
-
-    try:
-        fault_val = "Lorem ipsum" if faulty else constants.NON_FAULTY_VAL
-        status = struct.pack('!I', hash(fault_val, len(fault_val)))
-
-        send_msg_SSL(sock, status, ca_pem_path)
-        logger.debug(f"Fault status sent successfully: {'Faulty' if faulty else 'Non-faulty'}")
-    except struct.error as e:
-        logger.error(f"{current_function_name} - Error in packing fault status - {e}")
-    except socket.error as e:
-        logger.error(f"{current_function_name} - Socket error while sending fault status - {e}")
-    except ssl.SSLError as ssl_err:
-        logger.error(f"{current_function_name} - SSL error while sending fault status - {ssl_err}")
-    except Exception as e:
-        logger.error(f"{current_function_name} - Unexpected error while sending fault status - {e}")
-
-"""
-Receives and unpacks msg type
-Arg:
-    sock (socket.socket)
-    cert (str)
-    prikey (str)
-Ret: the unpacked message type (int)
-    or None, if an error occurred
-"""
-def receive_msg(sock, cert, prikey):
-    current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
-    logger.debug(f"Currently executing: {current_function_name}")
-
-    try:
-        msg_type_data = verify_recv(sock, cert, prikey)
-        #msg_type_data = msg_type_data = sock.recv(4)
-        if not msg_type_data or len(msg_type_data) != 4:
-            #print(f"msg_type_data: {msg_type_data}, {type(msg_type_data)}")
-            raise ValueError("Incorrect message length received")
-
-        msg_type = struct.unpack('!I', msg_type_data)[0]
-        logger.debug(f"{current_function_name} - Message type received: {msg_type}")
-        return msg_type
-    except struct.error as e:
-        logger.error(f"{current_function_name} - Error unpacking received data - {e}")
-    except ValueError as e:
-        logger.error(f"{current_function_name} - {e}")
-    except ssl.SSLError as ssl_err:
-        logger.error(f"{current_function_name} - SSL error in receive_msg - {ssl_err}")
-    except socket.error as sock_err:
-        logger.error(f"{current_function_name} - Socket error in receive_msg - {sock_err}")
-    except Exception as e:
-        logger.error(f"{current_function_name} - Unexpected error in receive_msg - {e}")
-        return None
-
-"""
-Initializes a client socket and connects it to the server.
-Arg:
-    ip_address (str)
-Ret: the initialized socket (socket.socket) 
-    or None, if failed
-"""
-def init_client_to_server(ip_address):
-    current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
-    logger.debug(f"Currently executing: {current_function_name}")
-
-    try:
-        # TCP
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.settimeout(constants.SOCKET_TIMEOUT_GLOBAL)
-        sock.connect((ip_address, constants.PORT))
-        logger.debug(f"Socket successfully connected to {ip_address}:{constants.PORT}")
-        return sock
-    except socket.error as err:
-        logger.error(f"{current_function_name} - Socket creation/connection error: {err}")
-        return None
 
 def hash(val, length):  # You will need to define a hash function in Python or use an existing one like hashlib
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
@@ -298,131 +69,68 @@ def hash(val, length):  # You will need to define a hash function in Python or u
     return sum(ord(c) for c in val) 
 
 
-def init_demo_socket():
-
+"""
+receiving()
+server-side operation
+receive msg_type
+"""
+def receive_msg(sock):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
     logger.debug(f"Currently executing: {current_function_name}")
 
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+    context.load_cert_chain(certfile=constants.crt_name, keyfile=constants.pri_key)
+    ssl_socket = context.wrap_socket(sock, server_side=True)
 
-    try:
-        sock.connect(('127.0.0.1', constants.DEMO_PORT))
-        return sock
-    except socket.error as err:
-        print("Socket creation/connection error:", err)
-        return None
+    msg_type_data = ssl_socket.recv(4)  # Assuming 4 bytes for an integer, as it is in C
+    logger.debug(f"msg_type_data: {msg_type_data}")
+    if len(msg_type_data) != 4:
+        raise ConnectionError("Failed to receive all 4 bytes for the message type")
+    logger.debug(f"{current_function_name} - Message type: {msg_type_data}")
+    msg_type = struct.unpack('!I', msg_type_data)[0]  # Unpacking the received data
+    return msg_type, ssl_socket
 
 """
-Sends a test message and receives a fault status response from the server.
-Arg:
-    sock (socket.socket)
-    cert (str)
-    prikey (str)
-    ca_pem_path (str)
-Ret: The fault status (int)
-    0 for non-faulty, 1 for faulty
-    None on error
+receiving() -> receive_msg()
+server-side operation
+response fault status, when receiving TEST_MSG
 """
-def request_fault_status(sock, cert, prikey, ca_pem_path):
+def send_fault_status(ssl_socket, faulty):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
     logger.debug(f"Currently executing: {current_function_name}")
 
     try:
-        test_msg_data = struct.pack('!I', constants.TEST_MSG)
-        send_msg_SSL(sock, test_msg_data, ca_pem_path)
-        logger.debug("Test message sent successfully")
-
-        status_data = verify_recv(sock, cert, prikey)
-        if not status_data or len(status_data) != 4:
-            raise ValueError("Incorrect length of status data received")
-
-        status = struct.unpack('!I', status_data)[0]
-        logger.debug(f"Status received: {status}")
-        return 0 if status == hash(constants.NON_FAULTY_VAL, len(constants.NON_FAULTY_VAL)) else 1
-
-    except struct.error as e:
-        logger.error(f"{current_function_name} - Error unpacking received data - {e}")
-    except ValueError as e:
-        logger.error(f"{current_function_name} - {e}")
+        ssl_socket.sendall(status)
     except ssl.SSLError as ssl_err:
-        logger.error(f"{current_function_name} - SSL error - {ssl_err}")
+        logger.error(f"{current_function_name} - SSL error while sending message: {ssl_err}")
     except socket.error as sock_err:
-        logger.error(f"{current_function_name} - Socket error - {sock_err}")
-    except Exception as e:
-        logger.error(f"{current_function_name} - Unexpected error - {e}")
-        return None
+        logger.error(f"{current_function_name} - Socket error while sending message: {sock_err}")
 
 """
-Sends code integrity status and receives a response to verify a signature.
-Arg:
-    sock (socket.socket)
-    cert (str)
-    prikey (str)
-    ca_pem_path (str)
-Ret: (bool)
-    True if the code integrity is verified, False otherwise.
+receiving() -> receive_msg()
+server-side operation
+response array, when receiving REQUEST_MSG
 """
-def request_code_integrity_status(sock, cert, prikey, ca_pem_path):
+def send_array(ssl_socket, arr):
+
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
     logger.debug(f"Currently executing: {current_function_name}")
 
+    buffer = [struct.pack('!i', val) for val in arr]  # Convert integers to network byte order
+    buffer_bytes = b''.join(buffer)  # Join the byte arrays to create a single byte string
     try:
-        combined_hash = code_integrity_check.generate_combined_hash()
-        logger.info(f"{current_function_name} - Generated combined hash: {combined_hash}")
-
-        test_msg_data = struct.pack('!I', constants.CODE_INTEGRITY_MSG)
-        send_msg_SSL(sock, test_msg_data, ca_pem_path)
-        logger.debug("Code integrity message request sent successfully")
-
-        signed_signature = verify_recv(sock, cert, prikey)
-        if not signed_signature:
-            raise ValueError("No signature received for code integrity verification")
-
-        return code_integrity_check.verify_signature(combined_hash, signed_signature)
-
-    except struct.error as e:
-        logger.error(f"{current_function_name} - Error packing/unpacking data - {e}")
-    except ValueError as e:
-        logger.error(f"{current_function_name} - {e}")
+        ssl_socket.sendall(buffer_bytes)
     except ssl.SSLError as ssl_err:
-        logger.error(f"{current_function_name} - SSL error - {ssl_err}")
+        logger.error(f"{current_function_name} - SSL error while sending message: {ssl_err}")
     except socket.error as sock_err:
-        logger.error(f"{current_function_name} - Socket error - {sock_err}")
-    except Exception as e:
-        logger.error(f"{current_function_name} - Unexpected error - {e}")
-        return False
+        logger.error(f"{current_function_name} - Socket error while sending message: {sock_err}")
 
 """
-Sends a hash signature for code integrity check
-Arg:
-    sock (socket.socket)
-    ca_pem_path (str)
+receiving() -> receive_msg()
+server-side operation
+response signed hash, when receiving CODE_INTEGRITY_MSG
 """
-def send_code_integrity_signature(sock, ca_pem_path):
-    current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
-    logger.debug(f"Currently executing: {current_function_name}")
-
-    try:
-        combined_hash = os.getenv(constants.COMBINED_HASH_VARIABLE, constants.ENV_VAR_DEFAULT_VALUE)
-        logger.info(f"{current_function_name} - Retrieved combined hash: {combined_hash}")
-
-        signed_hash = code_integrity_check.sign_data(combined_hash)
-        if not signed_hash:
-            raise ValueError("Failed to sign the hash for code integrity")
-
-        send_msg_SSL(sock, signed_hash, ca_pem_path)
-        logger.debug("Code integrity signature sent successfully")
-
-    except ValueError as e:
-        logger.error(f"{current_function_name} - {e}")
-    except ssl.SSLError as ssl_err:
-        logger.error(f"{current_function_name} - SSL error while sending code integrity signature - {ssl_err}")
-    except socket.error as sock_err:
-        logger.error(f"{current_function_name} - Socket error while sending code integrity signature - {sock_err}")
-    except Exception as e:
-        logger.error(f"{current_function_name} - Unexpected error while sending code integrity signature - {e}")
-
-def send_code_integrity_signature(sock, ca_pem_path):
+def send_code_integrity_signature(ssl_socket):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
     logger.debug(f"Currently executing: {current_function_name}")
     
@@ -430,9 +138,121 @@ def send_code_integrity_signature(sock, ca_pem_path):
         combined_hash = os.getenv(constants.COMBINED_HASH_VARIABLE, constants.ENV_VAR_DEFAULT_VALUE)
         logger.info(f"{current_function_name} - Stored combined hash - {combined_hash}")
         signed_hash = code_integrity_check.sign_data(combined_hash)
-        send_msg_SSL(sock, signed_hash, ca_pem_path)
+        ssl_socket.sendall(signed_hash)
         logger.debug(f"Code integrity message sent successfully")
+    except ssl.SSLError as ssl_err:
+        logger.error(f"{current_function_name} - SSL error while sending message: {ssl_err}")
+    except socket.error as sock_err:
+        logger.error(f"{current_function_name} - Socket error while sending message: {sock_err}")
+
+"""
+init client-side SSL socket
+
+"""
+def init_client_to_server(ip_address):
+    current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
+    logger.debug(f"Currently executing: {current_function_name}")
+    
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.settimeout(constants.SOCKET_TIMEOUT_GLOBAL)
+
+    context = ssl.create_default_context()
+    context.load_verify_locations(constants.ca_pem_path)
+    ssl_socket = context.wrap_socket(sock, server_hostname=ip_address)
+
+    try:
+        ssl_socket.connect((ip_address, constants.PORT))
+        return ssl_socket
+    except ssl.SSLError as ssl_err:
+        logger.error(f"{current_function_name} - SSL error while initializing SSL socket: {ssl_err}")
+    except socket.error as sock_err:
+        logger.error(f"{current_function_name} - Socket error while initializing SSL socket: {sock_err}")
+    return None
+
+"""
+update_arr()
+clinet-side operation
+request code integrity status when SSL socket is created
+"""
+def request_code_integrity_status(ssl_socket):
+    current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
+    logger.debug(f"Currently executing: {current_function_name}")
+    code_integrity_verified = False
+
+    try:
+        combined_hash = code_integrity_check.generate_combined_hash()
+        logger.info(f"{current_function_name} - Generated combined hash - {combined_hash}")
+        test_msg_data = struct.pack('!I', constants.CODE_INTEGRITY_MSG)  # Pack the TEST_MSG as a 4-byte integer
+        ssl_socket.sendall(test_msg_data)
+        logger.debug(f"Code integrity message request sent successfully")
+
+        signed_signature = ssl_socket.recv(1024)  # Assuming 4 bytes for an integer, as it is in C
+
+        code_integrity_verified = code_integrity_check.verify_signature(combined_hash, signed_signature)
+        
+    except socket.timeout as e:
+        logger.error(f"{current_function_name} - Socket connection timed out")
+    except ssl.SSLError as ssl_err:
+        logger.error(f"{current_function_name} - SSL error when requesting code integrity status: {ssl_err}")
+    except socket.error as sock_err:
+        logger.error(f"{current_function_name} - Socket error when requesting code integrity status: {sock_err}")
+    except Exception as e:
+        logger.error(f"{current_function_name} - {e}")
+    finally:
+        return code_integrity_verified
+
+"""
+update_arr()
+clinet-side operation
+request fault status when SSL socket is created
+"""
+def request_fault_status(ssl_socket):
+    current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
+    logger.debug(f"Currently executing: {current_function_name}")
+
+    try:
+        test_msg_data = struct.pack('!I', constants.TEST_MSG)  # Pack the TEST_MSG as a 4-byte integer
+        ssl_socket.send(test_msg_data)
+        logger.debug(f"Test message sent successfully")
+
+        status_data = ssl_socket.recv(4)  # Assuming 4 bytes for an integer, as it is in C
+        logger.debug(f"status_data: {status_data}")
+        logger.debug(f"Length of the status data: {len(status_data)}")
+
+        status = struct.unpack('!I', status_data)[0]  # Unpacking the received data
+        logger.debug(f"Status data: {status}")
+    except ConnectionError as e:
+        logger.error(f"Failed to receive all 4 bytes for the status")
     except socket.timeout as e:
         logger.error(f"Socket connection timed out")
+    except ssl.SSLError as ssl_err:
+        logger.error(f"{current_function_name} - SSL error when requesting code integrity status: {ssl_err}")
+    except socket.error as sock_err:
+        logger.error(f"{current_function_name} - Socket error when requesting code integrity status: {sock_err}")
     except Exception as e:
-        logger.error(f"Socket error: {e}")
+        logger.error(f"{current_function_name} - Unexpected error - {e}")
+        return None
+
+"""
+update_arr()
+clinet-side operation
+request arr when SSL socket is created
+"""
+def request_arr(ssl_socket):
+    current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
+    logger.debug(f"Currently executing: {current_function_name}")
+
+    req_msg_data = struct.pack('!I', constants.REQUEST_MSG)
+    ssl_socket.send(req_msg_data)
+
+    # buffer_data = sock.recv(constants.NUM_NODES * 4)
+    buffer_data = ssl_socket.recv(1024)
+    logger.debug(f"buffer_data: {buffer_data}")
+    arr = [0] * constants.NUM_NODES
+    try:
+        arr = list(struct.unpack('!' + 'i'*constants.NUM_NODES, buffer_data))
+        logger.debug(f"{current_function_name} - Received array - {arr}")
+    except Exception as e:
+        logger.error(f"{current_function_name} - Error unpacking received socket data - {e}")
+
+    return arr

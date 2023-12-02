@@ -16,6 +16,7 @@ import msvcrt
 import code_integrity_check
 from logconfig import get_logger
 import crypto
+import ssl
 
 logger = get_logger(__name__)
 
@@ -45,7 +46,7 @@ def start_algo(faulty, connections, num_connections, node_num):
     # init cert
     private_key = crypto.gen_pri_key()
     csr = crypto.gen_CSR(private_key)
-    communication.req_CSR(CA_addr, CA_port, csr)
+    communication.req_CSR(csr)
 
     # # Check if the './test' directory exists
     # test_directory = "./test"
@@ -123,12 +124,12 @@ def adaptive_dsd(faulty, connections, num_connections, node_num):
                 
             detection_status = monitor.run_detection()
             logger.info(f"{current_function_name} - Detection status - {detection_status}")
-
+            
             # update cert after each round of detection
             private_key = crypto.gen_pri_key()  # Generate new private key
             csr = crypto.gen_CSR(private_key)  # Generate CSR using the private key
-            communication.send_flag_to_CA(CA_addr, CA_flag_port, FAULTY)  # Report faulty status to CA
-            communication.req_CSR(CA_addr, CA_port, csr)  # Request cert from CA
+            communication.send_flag_to_CA(FAULTY)  # Report faulty status to CA
+            communication.req_CSR(csr)  # Request cert from CA
 
             # update lookup table
             if not FAULTY and detection_status:
@@ -154,18 +155,24 @@ def receive_thread(server_fd):
         while True:
             time.sleep(2)
             receiving(server_fd)
+    except ssl.SSLError as ssl_err:
+        logger.error(f"{current_function_name} - SSL error: {ssl_err}")
+    except socket.error as sock_err:
+        logger.error(f"{current_function_name} - Socket error: {sock_err}")
     except Exception as e:
         logger.error(f"{current_function_name} - Error - {e}")
     finally:
         server_fd.close()
         print("server_fd closed.")
 
+"""
+Server side operation
+receive msg_type and response
+"""
 def receiving(server_fd):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
     logger.debug(f"Currently executing: {current_function_name}")
 
-    address = ('', 0)  # Dummy initial value
-    buffer_size = 2000
     current_sockets = [server_fd]
     ready_sockets = None
     k = 0
@@ -191,23 +198,23 @@ def receiving(server_fd):
                     except Exception as e:
                         logger.error(f"{current_function_name} - Error extracting client details from ready socket - {e}")
                 else:
-                    msg_type = communication.receive_msg(s, crt_name, pri_key)
+                    msg_type, ssl_socket = communication.receive_msg(s)
                     if msg_type == constants.TEST_MSG:
                         try:
                             logger.info(f"{current_function_name} - Sending fault status - {FAULTY}")
-                            communication.send_fault_status(s, FAULTY, ca_pem_path)
+                            communication.send_fault_status(ssl_socket, FAULTY)
                             logger.debug(f"{current_function_name} - Message Type - TEST_MSG - sent fault status successfully")
                         except Exception as e:
                             logger.error(f"{current_function_name} - Message Type - TEST_MSG - Error sending message - {e}")
                     elif msg_type == constants.REQUEST_MSG:
                         try:
-                            communication.send_array(s, tested_up, ca_pem_path)
+                            communication.send_array(ssl_socket, tested_up)
                             logger.debug(f"{current_function_name} - Message Type - REQUEST_MSG - sent array successfully")
                         except Exception as e:
                             logger.error(f"{current_function_name} - Message Type - REQUEST_MSG - Error sending array - {e}")
                     elif msg_type == constants.CODE_INTEGRITY_MSG:
                         try:
-                            communication.send_code_integrity_signature(s, ca_pem_path)
+                            communication.send_code_integrity_signature(ssl_socket)
                         except Exception as e:
                             logger.error(f"{current_function_name} - Message Type - CODE_INTEGRITY_MSG - Error sending data - {e}")
                     current_sockets.remove(s)
@@ -230,60 +237,57 @@ def update_arr(connections, num_connections, node_num):
 
             if not CODE_INTEGRITY_CHECK_FLAG and constants.ENABLE_CODE_INTEGRITY_DETECTION:
                 logger.debug(f"{current_function_name} - Initiating code integrity check")
-                sock = communication.init_client_to_server(connections[i]['ip_addr'])
-                if sock is None:
-                    logger.error(f"Socket not created to IP: {connections[i]['ip_addr']}")
+                ssl_socket = communication.init_client_to_server(connections[i]['ip_addr'])
+                if ssl_socket is None:
+                    logger.error(f"SSL Socket not created to IP: {connections[i]['ip_addr']}")
 
-                logger.debug(f"Socket creation successful to IP: {connections[i]['ip_addr']}")
-                code_integrity_status = communication.request_code_integrity_status(sock, crt_name, pri_key, ca_pem_path)
+                logger.debug(f"SSL Socket creation successful to IP: {connections[i]['ip_addr']}")
+                code_integrity_status = communication.request_code_integrity_status(ssl_socket)
                 CODE_INTEGRITY_CHECK_FLAG = True
 
                 if not code_integrity_status:
                     FAULTY = 1
 
                 try:
-                    sock.close()
-                    print(f"{current_function_name}: sock closed. try 1")
+                    ssl_socket.close()
                 except Exception as e:
-                    logger.error(f"{current_function_name} - Failed to close socket which is not alive")
+                    logger.error(f"{current_function_name} - Failed to close SSL socket which is not alive")
 
             # Ask for fault status
-            sock = communication.init_client_to_server(connections[i]['ip_addr'])
-            if sock is None:
-                logger.error(f"Socket not created to IP: {connections[i]['ip_addr']}")
+            ssl_socket = communication.init_client_to_server(connections[i]['ip_addr'])
+            if ssl_socket is None:
+                logger.error(f"SSL Socket not created to IP: {connections[i]['ip_addr']}")
                 continue
             
-            logger.debug(f"Socket creation successful to IP: {connections[i]['ip_addr']}")
-            fault_status = communication.request_fault_status(sock, crt_name, pri_key, ca_pem_path)
+            logger.debug(f"SSL Socket creation successful to IP: {connections[i]['ip_addr']}")
+            fault_status = communication.request_fault_status(ssl_socket)
             try:
-                sock.close()
-                print(f"{current_function_name}: sock closed. try 2")
+                ssl_socket.close()
             except Exception as e:
-                logger.error(f"{current_function_name} - Failed to close socket which is not alive")
+                logger.error(f"{current_function_name} - Failed to close SSL socket which is not alive")
 
             if (not FAULTY and not fault_status) or (FAULTY and fault_status):  # TODO: Add more logic here
-                sock = communication.init_client_to_server(connections[i]['ip_addr'])
-                if sock is None:
-                    logger.error(f"Socket not created to IP: {connections[i]['ip_addr']}")
+                ssl_socket = communication.init_client_to_server(connections[i]['ip_addr'])
+                if ssl_socket is None:
+                    logger.error(f"SSL Socket not created to IP: {connections[i]['ip_addr']}")
                     continue
-                new_arr = communication.request_arr(sock, crt_name, pri_key, ca_pem_path)
+                new_arr = communication.request_arr(ssl_socket)
                 logger.info(f"{current_function_name} - New array value received from {connections[i]['ip_addr']}  - {new_arr}")
                 try:
-                    sock.close()
-                    print(f"{current_function_name}: sock closed. try 3")
+                    ssl_socket.close()
                 except Exception as e:
                     logger.error(f"{current_function_name} - Failed to close socket which is not alive")
 
-                sock = communication.init_client_to_server(connections[i]['ip_addr'])
+                ssl_socket = communication.init_client_to_server(connections[i]['ip_addr'])
 
-                if sock is None:
-                    logger.error(f"Socket not created to IP: {connections[i]['ip_addr']}")
+                if ssl_socket is None:
+                    logger.error(f"SSL Socket not created to IP: {connections[i]['ip_addr']}")
                     continue
-                fault_status = communication.request_fault_status(sock, crt_name, pri_key, ca_pem_path) # Check fault status again before updating array
+
+                fault_status = communication.request_fault_status(ssl_socket)  # Check fault status again before updating array
                 logger.info(f"{current_function_name} - received fault status from {connections[i]['ip_addr']}  - {fault_status}")
                 try:
-                    sock.close()
-                    print(f"{current_function_name}: sock closed. try 4")
+                    ssl_socket.close()
                 except Exception as e:
                     logger.error(f"{current_function_name} - Failed to close socket which is not alive")
                 
@@ -291,14 +295,15 @@ def update_arr(connections, num_connections, node_num):
                     update_tested_up(new_arr, node_num, connections[i]['node_num'])
                     found_non_faulty = True
                     break
-
+        
+        except ssl.SSLError as ssl_err:
+            logger.error(f"{current_function_name} - SSL error - {ssl_err}")
         except socket.error as e:
             logger.error(f"{current_function_name} - Socket error - {e}")
         
         finally:
             try:
-                sock.close()
-                print(f"{current_function_name}: sock closed. try 5")
+                ssl_socket.close()
             except Exception as e:
                 logger.error(f"{current_function_name} - Failed to close socket which is not alive")
 
