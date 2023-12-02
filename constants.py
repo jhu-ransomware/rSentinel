@@ -45,7 +45,7 @@ The code will select a sample of files up to this limit from each directory to p
 Setting this limit helps in managing the analysis workload and improves performance by focusing on a subset of files.
 For example, a value of 2 means only two files from each directory will be chosen for entropy scanning.
 """
-ENTROPY_FILE_COUNT_PER_DIRECTORY = 7
+ENTROPY_FILE_COUNT_PER_DIRECTORY = 4
 
 
 
