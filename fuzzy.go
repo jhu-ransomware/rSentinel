@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
+	"io/fs"
 	"log"
 	"math/rand"
 	"os"
 	"path/filepath"
-	"regexp"
 	"runtime"
 	"sync"
 	"sync/atomic"
@@ -61,14 +61,29 @@ func checkFilesInDirectory(directory string) int {
 	similarFiles := make(map[string][]string)
 
 	// Define a regular expression to extract base name (considering both Windows and Linux paths)
-	baseNameRegex := regexp.MustCompile(`^(.+?)[\\/].+?$`)
-
 	var wg sync.WaitGroup
 	resultChan := make(chan int)
 
 	// Randomly sample files for comparison
 	rand.Seed(time.Now().UnixNano())
 	var totalFiles int32 // Counter for the total number of files checked
+
+	err := filepath.WalkDir(directory, func(path string, d fs.DirEntry, errWalk error) error {
+		if errWalk != nil {
+			// log.Printf("Error accessing %s: %v\n", path, errWalk)
+			return nil
+		}
+		if !d.IsDir() {
+			// Get the base name without considering multiple separators
+			similarFiles[d.Name()] = append(similarFiles[d.Name()], path)
+		}
+		return nil
+	})
+
+	if err != nil {
+		log.Printf("Error walking the directory: %v\n", err)
+		return -1
+	}
 
 	for _, files := range similarFiles {
 		if len(files) >= 2 {
@@ -83,21 +98,7 @@ func checkFilesInDirectory(directory string) int {
 					atomic.AddInt32(&totalFiles, 1)
 
 					wg.Add(1)
-					go func(pathA, pathB string) {
-						defer wg.Done()
-
-						similarity, err := calculateSimilarity(pathA, pathB)
-						if err != nil {
-							log.Println("Error calculating similarity:", err)
-							return
-						}
-
-						if similarity >= 0 && similarity <= 2 {
-							resultChan <- 1 // Signal that a dissimilar pair is found
-						} else {
-							resultChan <- 0 // Signal that the pair is not dissimilar
-						}
-					}(pathA, sample[j])
+					go calculateSimilarity(pathA, sample[j], &wg, resultChan)
 
 					// Check if the maximum total files is reached
 					if atomic.LoadInt32(&totalFiles) >= maxTotalFiles {
