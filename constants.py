@@ -23,6 +23,12 @@ CODE_DIR = "./"
 COMBINED_HASH_VARIABLE = "RSENTINEL_COMBINED_HASH"
 ENV_VAR_DEFAULT_VALUE = "Hello World"
 
+ENABLE_ENTROPY_DETECTION = True
+ENABLE_FILE_TYPE_CHANGES_DETECTION = True
+ENABLE_CANARY_DETECTION = True
+ENABLE_FUZZY_HASH_DETECTION = True
+ENABLE_CODE_INTEGRITY_DETECTION = False
+
 
 """
 This variable sets the maximum file size limit (in KB) for scanning file entropies.
@@ -30,7 +36,7 @@ Files larger than this limit will be excluded from entropy calculations.
 Setting this limit helps to reduce computation time and improve system performance.
 For example, to set a limit of 500KB, the value of this variable should be 500.
 """
-ENTROPY_FILE_SIZE_LIMIT = 500
+ENTROPY_FILE_SIZE_LIMIT = 102400
 
 
 """
@@ -39,7 +45,7 @@ The code will select a sample of files up to this limit from each directory to p
 Setting this limit helps in managing the analysis workload and improves performance by focusing on a subset of files.
 For example, a value of 2 means only two files from each directory will be chosen for entropy scanning.
 """
-ENTROPY_FILE_COUNT_PER_DIRECTORY = 2
+ENTROPY_FILE_COUNT_PER_DIRECTORY = 4
 
 
 

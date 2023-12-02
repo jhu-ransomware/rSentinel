@@ -122,7 +122,7 @@ def validate_files():
                     tampered_docx_count += 1
 
     total_tampered_count = tampered_pdf_count + tampered_docx_count
-    return total_tampered_count > 5
+    return total_tampered_count >= 3
 
 
 
@@ -151,14 +151,14 @@ def execute_canary_logic():
         # Specify the full path for file generation
         pdf_paths = [
             os.path.join(
-                generate_random_location(["C:\\Users\\RWareUser\\Downloads", "C:\\Users\\RWareUser\\Desktop", "C:\\Users\\RWareUser\\Documents"]),
+                generate_random_location(["C:\\Users\\rSUser\\Downloads", "C:\\Users\\rSUser\\Desktop", "C:\\Users\\rSUser\\Documents"]),
                 pdf_filename
             ) for pdf_filename in pdf_filenames
         ]
 
         docx_paths = [
             os.path.join(
-                generate_random_location(["C:\\Users\\RWareUser\\Downloads", "C:\\Users\\RWareUser\\Desktop", "C:\\Users\\RWareUser\\Documents"]),
+                generate_random_location(["C:\\Users\\rSUser\\Downloads", "C:\\Users\\rSUser\\Desktop", "C:\\Users\\rSUser\\Documents"]),
                 docx_filename.format(i)
             ) for i in range(6)  # Assuming 6 DOCX files
         ]

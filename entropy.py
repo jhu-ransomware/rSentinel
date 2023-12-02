@@ -36,7 +36,7 @@ def calc_entropy_file(filename):
             data = fh.read()
             histlen, hist = makehist(data)  # Pass the file content to makehist function
             H = entropy(hist, histlen, len(data))
-            logger.debug(f"Entropy Value of {filename}: {H}")
+            logger.info(f"Entropy Value of {filename}: {H}")
             return H
     except Exception as e:
         logger.error(f"Error opening file {filename}: {e}")
@@ -69,8 +69,8 @@ def calculate_entropy_for_files_in_directory(directories):
 
         total_files = 0  # Initialize the count for successfully processed files
         high_entropy_files = 0
-        threshold_lower = 7.980
-        threshold_upper = 8.000
+        threshold_lower = 7.99900
+        threshold_upper = 8.00000
 
         results = [calc_entropy_file(file) for file in selected_files]
 
@@ -84,8 +84,8 @@ def calculate_entropy_for_files_in_directory(directories):
 
         if total_files > 0:
             percentage_high_entropy = (high_entropy_files / total_files) * 100
-            if percentage_high_entropy > 30:
-                logger.info(f"Result: 1 - More than 30% of files have entropy within the specified range")
+            if percentage_high_entropy >= 20:
+                logger.info(f"Result: 1 - More than 20% of files have entropy within the specified range")
                 return 1
             else:
                 logger.info(f"Result: 0 - Less than or equal to 30% of files have entropy within the specified range")
@@ -99,7 +99,7 @@ def calculate_entropy_for_files_in_directory(directories):
         logger.error(f"Error processing files in directory {directory}: {e}")
 
 def main():
-    user_directories = ["C:\\Users\\RWareUser\\Downloads", "C:\\Users\\RWareUser\\Documents", "C:\\Users\\RWareUser\\Desktop"]
+    user_directories = ["C:\\Users\\rSUser\\Downloads", "C:\\Users\\rSUser\\Documents", "C:\\Users\\rSUser\\Desktop"]    
     return calculate_entropy_for_files_in_directory(user_directories)
 
 if __name__ == "__main__":

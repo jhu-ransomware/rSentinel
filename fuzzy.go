@@ -1,19 +1,19 @@
 package main
 
 import (
+	"crypto/aes"
+	"crypto/cipher"
+	"encoding/base64"
 	"fmt"
-	"io/fs"
 	"log"
 	"os"
 	"path/filepath"
-	"regexp"
+	"strings"
 
 	"github.com/eciavatta/sdhash"
 )
 
-const defaultPath = `C:\Users\RWareUser\Documents`
-
-func calculateSimilarity(filename1, filename2 string) (int, error) {
+func calculateFuzzyHashSimilarity(filename1, filename2 string) (float64, error) {
 	factoryA, err := sdhash.CreateSdbfFromFilename(filename1)
 	if err != nil {
 		return 0, err
@@ -26,123 +26,181 @@ func calculateSimilarity(filename1, filename2 string) (int, error) {
 	}
 	sdbfB := factoryB.Compute()
 
-	return sdbfA.Compare(sdbfB), nil
+	// Convert the integer similarity score to float64
+	return float64(sdbfA.Compare(sdbfB)), nil
 }
 
-func checkFilesInDirectory(directory string) int {
-	// Check if the directory exists
-	if _, err := os.Stat(directory); os.IsNotExist(err) {
-		log.Printf("Error: Directory %s does not exist.\n", directory)
-		os.Exit(1)
-	}
-	dissimilarCount := 0
-	totalFileCount := 0
-	// Create a map to store similar file names
-	similarFiles := make(map[string][]string)
+func checkSimilarFiles(filePath string, processedPairs map[string]bool) int {
+	baseName := filepath.Base(filePath)
+	fmt.Printf("Processing file with base name: %s\n", baseName)
 
-	// Define a regular expression to extract base name
-	baseNameRegex := regexp.MustCompile(`^(.+?)\..+?$`)
+	// Get the directory of the file
+	dir := filepath.Dir(filePath)
 
-	err := filepath.WalkDir(directory, func(path string, d fs.DirEntry, errWalk error) error {
-		if errWalk != nil {
-			// log.Printf("Error accessing %s: %v\n", path, errWalk)
-			return nil
-		}
-		if !d.IsDir() {
-			// Get the base name without considering multiple extensions
-			baseName := baseNameRegex.ReplaceAllString(d.Name(), "$1")
-
-			// Log the base name and extension for debugging
-			// log.Printf("File: %s, Base Name: %s\n", d.Name(), baseName)
-
-			// Add the file to the similarFiles map
-			similarFiles[baseName] = append(similarFiles[baseName], path)
-
-			// Get the file info
-			fileInfo, errFileInfo := d.Info()
-			if errFileInfo != nil {
-				// log.Printf("Error getting file info for %s: %v\n", path, errFileInfo)
-				return nil
-			}
-
-			// Skip files smaller than 20 KB or larger than 200 MB
-			if fileInfo.Size() < 20*1024 || fileInfo.Size() > 200*1024*1024 {
-				// log.Printf("Skipping file %s due to size restrictions (size: %d bytes)\n", path, fileInfo.Size())
-				return nil
-			}
-		}
-		return nil
-	})
-
+	// List all files in the same directory
+	files, err := os.ReadDir(dir)
 	if err != nil {
-		// log.Printf("Error walking the directory: %v\n", err)
-		return -1
+		log.Printf("Error reading directory: %v", err)
+		return 0
 	}
 
-	// Processed pairs map for tracking
-	processedPairs := make(map[string]bool)
+	// Print the list of files in the directory
+	fmt.Println("Files in the directory:")
+	for _, file := range files {
+		fmt.Println(file.Name())
+	}
 
-	// Iterate over the similarFiles map
-	for _, files := range similarFiles {
-		if len(files) < 2 {
-			// Skip groups with only one file
-			log.Println("Skipping group with less than two files.")
+	// Filter files with the same base name (ignoring extensions)
+	sameBaseNameFiles := make([]string, 0)
+	for _, file := range files {
+		if file.IsDir() {
+			continue
+		}
+		fileBaseName := strings.TrimSuffix(file.Name(), filepath.Ext(file.Name()))
+		if fileBaseName == baseName && file.Name() != filepath.Base(filePath) {
+			sameBaseNameFiles = append(sameBaseNameFiles, filepath.Join(dir, file.Name()))
+		}
+	}
+
+	// Check fuzzy hash similarity for each file
+	for _, otherFilePath := range sameBaseNameFiles {
+		// Check if the pair has already been processed
+		pairKey := fmt.Sprintf("%s-%s", filePath, otherFilePath)
+		if processedPairs[pairKey] {
 			continue
 		}
 
-		log.Println("Starting similarity checks...")
+		log.Printf("Checking fuzzy hash similarity between %s and %s\n", filePath, otherFilePath)
 
-		for i, pathA := range files {
-			for j := i + 1; j < len(files); j++ {
-				// Generate a unique key for the pair
-				pairKey := fmt.Sprintf("%s|%s", pathA, files[j])
+		// Calculate fuzzy hash similarity
+		score, err := calculateFuzzyHashSimilarity(filePath, otherFilePath)
+		if err != nil {
+			log.Printf("Error calculating fuzzy hash similarity: %v", err)
+			continue
+		}
 
-				// Check if the pair has already been processed
-				if _, processed := processedPairs[pairKey]; !processed {
-					processedPairs[pairKey] = true
+		log.Printf("Fuzzy hash similarity score between %s and %s: %f\n", filePath, otherFilePath, score)
 
-					// Log the files being checked
-					log.Printf("Checking similarity between %s and %s\n", pathA, files[j])
-
-					// Compare a and b file names
-					similarity, errSimilarity := calculateSimilarity(pathA, files[j])
-					if errSimilarity != nil {
-						log.Println("Error calculating similarity:", errSimilarity)
-						// Handle the error as needed (e.g., return, continue with the next pair, etc.)
-						continue
-					}
-
-					// log.Printf("Similarity between %s and %s: %d\n", pathA, files[j], similarity)
-					totalFileCount++ // Increment totalFileCount for every pair of files compared
-
-					if similarity >= 0 && similarity <= 2 {
-						log.Printf("Dissimilarity between %s and %s: %d\n", pathA, files[j], similarity)
-						dissimilarCount++
-					}
-				}
-			}
+		// Print the result for each file
+		if score <= 3 && score >= 0 {
+			fmt.Printf("Result: Dissimilar files found - %s and %s\n", filePath, otherFilePath)
+			// Mark the pair as processed
+			processedPairs[pairKey] = true
+			return 1
+		} else {
+			fmt.Printf("Result: Similar files found between %s and %s\n", filePath, otherFilePath)
 		}
 	}
 
-	dissimilarityThreshold := 0.6
-	log.Printf("Dissimilar Count: %d, Total File Count: %d\n", dissimilarCount, totalFileCount)
-	if float64(dissimilarCount)/float64(totalFileCount) >= dissimilarityThreshold {
-		return 1
-	}
+	// Print the result if no matching files with similar fuzzy hash are found
+	fmt.Println("Result: No similar files found")
 	return 0
 }
 
+func decryptConfigFile(keyPath, configPath string) (map[string]string, error) {
+	// Read the encoded key from keys.txt
+	keyBytes, err := os.ReadFile(keyPath)
+	if err != nil {
+		return nil, fmt.Errorf("error reading key from keys.txt: %v", err)
+	}
+
+	// Decode the Base64-encoded key
+	key, err := base64.StdEncoding.DecodeString(string(keyBytes))
+	if err != nil {
+		return nil, fmt.Errorf("error decoding key: %v", err)
+	}
+
+	// Read the encrypted configuration data from config.txt
+	configBytes, err := os.ReadFile(configPath)
+	if err != nil {
+		return nil, fmt.Errorf("error reading config.txt: %v", err)
+	}
+
+	// Extract IV and ciphertext
+	iv := configBytes[:aes.BlockSize]
+	ciphertext := configBytes[aes.BlockSize:]
+
+	// Create a new AES cipher block with the key
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, fmt.Errorf("error creating AES cipher: %v", err)
+	}
+
+	// Create a cipher.NewCBCDecrypter with the AES block and IV
+	mode := cipher.NewCBCDecrypter(block, iv)
+
+	// Decrypt the ciphertext
+	mode.CryptBlocks(ciphertext, ciphertext)
+
+	// Unpad the decrypted data
+	unpaddedData, err := unpad(ciphertext)
+	if err != nil {
+		return nil, fmt.Errorf("error unpadding data: %v", err)
+	}
+
+	// Convert the decrypted data to a string
+	configStr := string(unpaddedData)
+
+	// Parse the configuration string into a map
+	configDict := make(map[string]string)
+	lines := strings.Split(configStr, "\n")
+	for _, line := range lines {
+		if strings.Contains(line, "=") {
+			parts := strings.Split(line, "=")
+			key := strings.TrimSpace(parts[0])
+			value := strings.TrimSpace(parts[1])
+			configDict[key] = value
+		}
+	}
+
+	return configDict, nil
+}
+
+func unpad(data []byte) ([]byte, error) {
+	padding := int(data[len(data)-1])
+	if padding > aes.BlockSize || padding == 0 {
+		return nil, fmt.Errorf("invalid padding")
+	}
+	return data[:len(data)-padding], nil
+}
+
 func main() {
-	// Use the default path if no command-line argument is provided
-	directory := defaultPath
+	keyPath := "keys.txt"
+	configPath := "config.txt"
 
-	// Alternatively, you can check if a command-line argument is provided and use it if available
-	// if len(os.Args) == 2 {
-	// 	directory = os.Args[1]
-	// }
+	configDict, err := decryptConfigFile(keyPath, configPath)
+	if err != nil {
+		log.Fatalf("Error decrypting config.txt: %v", err)
+	}
 
-	result := checkFilesInDirectory(directory)
+	// Get the file paths from config
+	pdfPaths := make([]string, 3)
+	pdfPaths[0] = strings.TrimSpace(configDict["PDF_PATH_0"])
+	pdfPaths[1] = strings.TrimSpace(configDict["PDF_PATH_1"])
+	pdfPaths[2] = strings.TrimSpace(configDict["PDF_PATH_2"])
 
-	// Print the result instead of using os.Exit
-	fmt.Printf("Result: %d\n", result)
+	docxPaths := make([]string, 2)
+	docxPaths[0] = strings.TrimSpace(configDict["DOCX_PATH_1"])
+	docxPaths[1] = strings.TrimSpace(configDict["DOCX_PATH_2"])
+
+	// Check for encrypted files for each PDF path
+	processedPairs := make(map[string]bool)
+	totalResult := 0
+	for _, pdfPath := range pdfPaths {
+		result := checkSimilarFiles(pdfPath, processedPairs)
+		totalResult += result
+	}
+
+	// Check for encrypted files for each DOCX path
+	for _, docxPath := range docxPaths {
+		result := checkSimilarFiles(docxPath, processedPairs)
+		totalResult += result
+	}
+
+	// Check if 4 out of 5 files have disimilar fuzzy hash
+	if totalResult >= 4 {
+		fmt.Println("Final Result: 1")
+	} else {
+		fmt.Println("Final Result: 0")
+	}
 }
