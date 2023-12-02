@@ -18,14 +18,17 @@ logger = get_logger(__name__)
 send the CSR to CA
 """
 def req_CSR(csr):
+    current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
+    logger.debug(f"Currently executing: {current_function_name}")
+
     if csr != None:
         # Send the CSR to the Baby CA
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             # Connect to server and send data
             sock.connect((constants.CA_addr, constants.CA_port))
-            print("Sending CSR...")
+            logger.debug(f"{current_function_name} - Sending CSR...")
             sock.sendall(csr.public_bytes(serialization.Encoding.PEM))
-            print("CSR sent!")
+            logger.debug(f"{current_function_name} - CSR sent successfully")
         
             # Receive data from the server and shut down
             received = sock.recv(2048)
@@ -37,19 +40,21 @@ def req_CSR(csr):
                 with open(constants.crt_name, 'wb') as f:
                     f.write(received)
 
-                print(f"Certificate saved as {constants.crt_name}") 
+                logger.debug(f"{current_function_name} - Certificate saved as {constants.crt_name}") 
                 #crypto.print_cert_info(constants.crt_name)
             else:
-                print("Din't receive Certificate from Baby CA!")
+                logger.error(f"{current_function_name} - Failed to receive certificate from Baby CA!")
 """
 Send flag value to CA if node is faulty
 Arg: 
     faulty (bool)
 """
 def send_flag_to_CA(faulty):
+    current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
+    logger.debug(f"Currently executing: {current_function_name}")
     # only send if node is in faulty status
     if faulty:
-        print("Node in faulty status. Report to CA.")
+        logger.debug(f"{current_function_name} - Node in faulty status. Report to CA.")
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             sock.connect((constants.CA_addr, constants.CA_flag_port))
             sock.send(b'1\n')

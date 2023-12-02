@@ -6,11 +6,18 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 import os
 import ipaddress
 import constants
+from logconfig import get_logger
+import inspect
+
+logger = get_logger(__name__)
 
 """
 generate private key
 """
 def gen_pri_key():
+
+    current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
+    logger.debug(f"Currently executing: {current_function_name}")
 
     if os.path.exists(constants.pri_key):
         os.remove(constants.pri_key)
@@ -28,7 +35,7 @@ def gen_pri_key():
             format=serialization.PrivateFormat.TraditionalOpenSSL,
             encryption_algorithm=serialization.NoEncryption()
         ))
-    print(f"Private key for this node generated. Saved as {constants.pri_key} ")
+    logger.debug(f"Private key for this node generated. Saved as {constants.pri_key} ")
     return private_key
 
 """
@@ -37,7 +44,8 @@ input: private_key
 output: csr, if generated; None, if not
 """
 def gen_CSR(private_key):
-    print("Creating CSR...")
+    current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
+    logger.debug(f"Currently executing: {current_function_name}")
     csr = x509.CertificateSigningRequestBuilder().subject_name(x509.Name([
         # CSR info
         x509.NameAttribute(NameOID.COUNTRY_NAME, u"US"),
@@ -53,32 +61,39 @@ def gen_CSR(private_key):
     ).sign(private_key, hashes.SHA256())
 
     if isinstance(csr, x509.CertificateSigningRequest):
-        print("CSR created.")
+        logger.debug(f"{current_function_name} - CSR created.")
         #print_csr_info(csr)
         return csr
     else:
-        print("CSR creation failed.")
+        logger.error(f"{current_function_name} - CSR creation failed.")
         return None
 
 def print_csr_info(csr):
-    print("\nCSR Information:")
-    print("Subject:", csr.subject)
+
+    current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
+    logger.debug(f"Currently executing: {current_function_name}")
+    
+    logger.debug(f"{current_function_name} - CSR Information:")
+    logger.debug(f"{current_function_name} - Subject:", csr.subject)
     for extension in csr.extensions:
-        print("Extension:", extension.oid._name, extension.value)
+        logger.debug(f"{current_function_name} - Extension:", extension.oid._name, extension.value)
 
 def print_cert_info(cert_path):
+    current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
+    logger.debug(f"Currently executing: {current_function_name}")
+    
     # Load the certificate from the file
     with open(cert_path, "rb") as cert_file:
         cert_data = cert_file.read()
         cert = x509.load_pem_x509_certificate(cert_data, default_backend())
 
     # Print certificate information
-    print("\nCertificate Information:")
-    print("Issuer:", cert.issuer)
-    print("Subject:", cert.subject)
-    print("Valid From:", cert.not_valid_before)
-    print("Valid To:", cert.not_valid_after)
-    print("Serial Number:", cert.serial_number)
+    logger.debug(f"{current_function_name} - Certificate Information:")
+    logger.debug(f"{current_function_name} - Issuer:", cert.issuer)
+    logger.debug(f"{current_function_name} - Subject:", cert.subject)
+    logger.debug(f"{current_function_name} - Valid From:", cert.not_valid_before)
+    logger.debug(f"{current_function_name} - Valid To:", cert.not_valid_after)
+    logger.debug(f"{current_function_name} - Serial Number:", cert.serial_number)
 
     for extension in cert.extensions:
         print("Extension:", extension.oid._name, extension.value)
