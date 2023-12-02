@@ -11,7 +11,7 @@ import (
 	"github.com/eciavatta/sdhash"
 )
 
-const defaultPath = `C:\Users\RWareUser\Documents`
+const defaultPath = `C:\Users\rSUser\Documents`
 
 func calculateSimilarity(filename1, filename2 string) (int, error) {
 	factoryA, err := sdhash.CreateSdbfFromFilename(filename1)
