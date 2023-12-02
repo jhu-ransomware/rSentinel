@@ -4,6 +4,7 @@ import canary
 import fuzzysd
 import file_type_changes as ftc
 from logconfig import get_logger
+import constants
 
 logger = get_logger(__name__)
 
@@ -13,32 +14,36 @@ def run_detection():
 
     cnt = 0  # counter for check fail: entropy increasing or canary modification
 
-    logger.info(f"Currently executing: Entropy Check")
-    result_entropy = entropy.main()
-    if result_entropy:
-        cnt += 1
-    logger.info(f"Count value after entropy: {cnt}")
+    if constants.ENABLE_ENTROPY_DETECTION:
+        logger.info(f"Currently executing: Entropy Check")
+        result_entropy = entropy.main()
+        if result_entropy:
+            cnt += 1
+        logger.info(f"Count value after entropy: {cnt}")
 
-    logger.info(f"Currently executing: Canary File Check")
-    result_canary = canary.execute_canary_logic()
-    if result_canary:
-        cnt += 1
-    logger.info(f"Count value after canary: {cnt}")
+    if constants.ENABLE_CANARY_DETECTION:
+        logger.info(f"Currently executing: Canary File Check")
+        result_canary = canary.execute_canary_logic()
+        if result_canary:
+            cnt += 1
+        logger.info(f"Count value after canary: {cnt}")
 
-    logger.info(f"Currently executing: Fuzzy Hashing")
-    result_fuzzy = fuzzysd.run_go_script()
-    status, _ = result_fuzzy  # Extract the status from the tuple
-    logger.info(f'The status is {status}')
-    if not isinstance(status, int) or status not in [0, 1]:
-        raise ValueError(f"Invalid status from fuzzysd: {status}. Expected 0 or 1.")
-    if status == 1:
-        cnt += 1
-    logger.info(f"Count value after fuzzy: {cnt}")
+    if constants.ENABLE_FUZZY_HASH_DETECTION:
+        logger.info(f"Currently executing: Fuzzy Hashing")
+        result_fuzzy = fuzzysd.run_go_script()
+        status, _ = result_fuzzy  # Extract the status from the tuple
+        logger.info(f'The status is {status}')
+        if not isinstance(status, int) or status not in [0, 1]:
+            raise ValueError(f"Invalid status from fuzzysd: {status}. Expected 0 or 1.")
+        if status == 1:
+            cnt += 1
+        logger.info(f"Count value after fuzzy: {cnt}")
 
-    logger.debug(f"Currently executing: File Type Changes")
-    if ftc.check_magic_numbers():
-        cnt += 1
-    logger.info(f"Count value after File Type Check: {cnt}")
+    if constants.ENABLE_FILE_TYPE_CHANGES_DETECTION:
+        logger.debug(f"Currently executing: File Type Changes")
+        if ftc.check_magic_numbers():
+            cnt += 1
+        logger.info(f"Count value after File Type Check: {cnt}")
 
     logger.info(f"Count value after all checks: {cnt}")
     if cnt > 0:

@@ -24,6 +24,15 @@ tested_up = None
 FAULTY = 1
 CODE_INTEGRITY_CHECK_FLAG = False
 
+# Global variables for CA
+CA_addr = "10.0.0.4"
+CA_port = 3000
+CA_flag_port = 3001
+cert = None
+ca_pem_path = "CA.pem"
+pri_key = 'pri.key'
+crt_name = 'node.crt'
+
 def start_algo(faulty, connections, num_connections, node_num):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
     logger.debug(f"Currently executing: {current_function_name}")
@@ -86,6 +95,7 @@ def adaptive_dsd(faulty, connections, num_connections, node_num):
 
     global FAULTY
     global tested_up
+    global cert
 
     FAULTY = faulty
 
@@ -153,6 +163,7 @@ def receive_thread(server_fd):
         logger.error(f"{current_function_name} - Error - {e}")
     finally:
         server_fd.close()
+        print("server_fd closed.")
 
 """
 Server side operation
@@ -224,7 +235,7 @@ def update_arr(connections, num_connections, node_num):
     for i in range(num_connections):
         try:
 
-            if not CODE_INTEGRITY_CHECK_FLAG:
+            if not CODE_INTEGRITY_CHECK_FLAG and constants.ENABLE_CODE_INTEGRITY_DETECTION:
                 logger.debug(f"{current_function_name} - Initiating code integrity check")
                 ssl_socket = communication.init_client_to_server(connections[i]['ip_addr'])
                 if ssl_socket is None:
@@ -272,6 +283,7 @@ def update_arr(connections, num_connections, node_num):
                 if ssl_socket is None:
                     logger.error(f"SSL Socket not created to IP: {connections[i]['ip_addr']}")
                     continue
+
                 fault_status = communication.request_fault_status(ssl_socket)  # Check fault status again before updating array
                 logger.info(f"{current_function_name} - received fault status from {connections[i]['ip_addr']}  - {fault_status}")
                 try:

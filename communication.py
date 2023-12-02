@@ -30,7 +30,6 @@ def req_CSR(csr):
             # Receive data from the server and shut down
             received = sock.recv(2048)
             if len(received) > 20: # fail: 15
-
                 if os.path.exists(constants.crt_name):
                     os.remove(constants.crt_name)
 
@@ -69,6 +68,7 @@ def hash(val, length):  # You will need to define a hash function in Python or u
     # Replace this with your actual hash function.
     return sum(ord(c) for c in val) 
 
+
 """
 receiving()
 server-side operation
@@ -98,12 +98,6 @@ response fault status, when receiving TEST_MSG
 def send_fault_status(ssl_socket, faulty):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
     logger.debug(f"Currently executing: {current_function_name}")
-    
-    status = struct.pack('!I', hash(constants.NON_FAULTY_VAL, len(constants.NON_FAULTY_VAL)))  # Convert to network byte order
-
-    if faulty:
-        fault_val = "Lorem ipsum"
-        status = struct.pack('!I', hash(fault_val, len(constants.NON_FAULTY_VAL)))
 
     try:
         ssl_socket.sendall(status)
@@ -153,6 +147,7 @@ def send_code_integrity_signature(ssl_socket):
 
 """
 init client-side SSL socket
+
 """
 def init_client_to_server(ip_address):
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
@@ -212,12 +207,8 @@ clinet-side operation
 request fault status when SSL socket is created
 """
 def request_fault_status(ssl_socket):
-
     current_function_name = inspect.currentframe().f_globals["__name__"] + "." + inspect.currentframe().f_code.co_name
     logger.debug(f"Currently executing: {current_function_name}")
-
-    status_data = None
-    status = None
 
     try:
         test_msg_data = struct.pack('!I', constants.TEST_MSG)  # Pack the TEST_MSG as a 4-byte integer
@@ -239,11 +230,8 @@ def request_fault_status(ssl_socket):
     except socket.error as sock_err:
         logger.error(f"{current_function_name} - Socket error when requesting code integrity status: {sock_err}")
     except Exception as e:
-        logger.error(f"Socket error: {e}")
-
-    if status == hash(constants.NON_FAULTY_VAL, len(constants.NON_FAULTY_VAL)):
-        return 0
-    return 1
+        logger.error(f"{current_function_name} - Unexpected error - {e}")
+        return None
 
 """
 update_arr()

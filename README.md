@@ -18,6 +18,7 @@ cd rSentinel
 
 First, deploy [Baby CA](https://github.com/Crane-Mocker/Baby-CA) as your CA. Generate your private key and CA pem.
 
+
 Configure `allowed_ips` of *Baby CA*, put the IPs of your nodes here!
 
 Transmit your CA pem to each of the node.
@@ -127,7 +128,6 @@ OR
 ```
 python p2p.py --this_node 2 --fault_status 0
 ```
-
 ## License
 
 ## Contact Us

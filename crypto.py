@@ -11,7 +11,7 @@ import constants
 generate private key
 """
 def gen_pri_key():
-
+  
     if os.path.exists(constants.pri_key):
         os.remove(constants.pri_key)
 
