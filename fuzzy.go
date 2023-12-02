@@ -35,6 +35,7 @@ func checkFilesInDirectory(directory string) int {
 		log.Printf("Error: Directory %s does not exist.\n", directory)
 		os.Exit(1)
 	}
+
 	dissimilarCount := 0
 	totalFileCount := 0
 	// Create a map to store similar file names
