@@ -89,7 +89,7 @@ func checkFilesInDirectory(directory string) int {
 
 				totalFileCount++
 
-				if similarity >= 0 && similarity <= 2 {
+				if similarity >= 0 && similarity <= 1 {
 					log.Printf("Dissimilarity between %s and %s: %d\n", pathA, files[j], similarity)
 					dissimilarCount++
 				}
