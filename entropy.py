@@ -84,8 +84,8 @@ def calculate_entropy_for_files_in_directory(directories):
 
         if total_files > 0:
             percentage_high_entropy = (high_entropy_files / total_files) * 100
-            if percentage_high_entropy > 30:
-                logger.info(f"Result: 1 - More than 30% of files have entropy within the specified range")
+            if percentage_high_entropy >= 20:
+                logger.info(f"Result: 1 - More than 20% of files have entropy within the specified range")
                 return 1
             else:
                 logger.info(f"Result: 0 - Less than or equal to 30% of files have entropy within the specified range")

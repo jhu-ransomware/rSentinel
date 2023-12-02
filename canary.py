@@ -122,7 +122,7 @@ def validate_files():
                     tampered_docx_count += 1
 
     total_tampered_count = tampered_pdf_count + tampered_docx_count
-    return total_tampered_count > 5
+    return total_tampered_count >= 3
 
 
 
