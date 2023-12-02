@@ -28,16 +28,16 @@ def run_detection():
             cnt += 1
         logger.info(f"Count value after canary: {cnt}")
 
-    if constants.ENABLE_FUZZY_HASH_DETECTION:
-        logger.info(f"Currently executing: Fuzzy Hashing")
-        result_fuzzy = fuzzysd.run_go_script()
-        status, _ = result_fuzzy  # Extract the status from the tuple
-        logger.info(f'The status is {status}')
-        if not isinstance(status, int) or status not in [0, 1]:
-            raise ValueError(f"Invalid status from fuzzysd: {status}. Expected 0 or 1.")
-        if status == 1:
-            cnt += 1
-        logger.info(f"Count value after fuzzy: {cnt}")
+    # if constants.ENABLE_FUZZY_HASH_DETECTION:
+    #     logger.info(f"Currently executing: Fuzzy Hashing")
+    #     result_fuzzy = fuzzysd.run_go_script()
+    #     status, _ = result_fuzzy  # Extract the status from the tuple
+    #     logger.info(f'The status is {status}')
+    #     if not isinstance(status, int) or status not in [0, 1]:
+    #         raise ValueError(f"Invalid status from fuzzysd: {status}. Expected 0 or 1.")
+    #     if status == 1:
+    #         cnt += 1
+    #     logger.info(f"Count value after fuzzy: {cnt}")
 
     if constants.ENABLE_FILE_TYPE_CHANGES_DETECTION:
         logger.debug(f"Currently executing: File Type Changes")
