@@ -5,16 +5,15 @@ from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.hazmat.primitives.asymmetric import rsa
 import os
 import ipaddress
-
-pri_key = 'pri.key'
+import constants
 
 """
 generate private key
 """
 def gen_pri_key():
 
-    if os.path.exists(pri_key):
-        os.remove(pri_key)
+    if os.path.exists(constants.pri_key):
+        os.remove(constants.pri_key)
 
     # Generate a private key for Node 1
     private_key = rsa.generate_private_key(
@@ -23,13 +22,13 @@ def gen_pri_key():
         backend=default_backend()
     )
     # Write private key to file
-    with open(pri_key, 'wb') as f:
+    with open(constants.pri_key, 'wb') as f:
         f.write(private_key.private_bytes(
             encoding=serialization.Encoding.PEM,
             format=serialization.PrivateFormat.TraditionalOpenSSL,
             encryption_algorithm=serialization.NoEncryption()
         ))
-    print(f"Private key for this node generated. Saved as {pri_key} ")
+    print(f"Private key for this node generated. Saved as {constants.pri_key} ")
     return private_key
 
 """

@@ -15,6 +15,7 @@ import inspect
 import msvcrt
 import code_integrity_check
 from logconfig import get_logger
+import crypto
 
 logger = get_logger(__name__)
 
@@ -31,6 +32,11 @@ def start_algo(faulty, connections, num_connections, node_num):
 
     FAULTY = faulty
     tested_up = [-1] * constants.NUM_NODES
+
+    # init cert
+    private_key = crypto.gen_pri_key()
+    csr = crypto.gen_CSR(private_key)
+    communication.req_CSR(csr)
 
     # # Check if the './test' directory exists
     # test_directory = "./test"
@@ -107,6 +113,13 @@ def adaptive_dsd(faulty, connections, num_connections, node_num):
                 
             detection_status = monitor.run_detection()
             logger.info(f"{current_function_name} - Detection status - {detection_status}")
+            
+            # update cert after each round of detection
+            private_key = crypto.gen_pri_key()  # Generate new private key
+            csr = crypto.gen_CSR(private_key)  # Generate CSR using the private key
+            communication.send_flag_to_CA(FAULTY)  # Report faulty status to CA
+            communication.req_CSR(csr)  # Request cert from CA
+
             # update lookup table
             if not FAULTY and detection_status:
                 FAULTY = 1
