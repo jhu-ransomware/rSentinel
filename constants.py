@@ -29,6 +29,24 @@ ENABLE_CANARY_DETECTION = True
 ENABLE_FUZZY_HASH_DETECTION = True
 ENABLE_CODE_INTEGRITY_DETECTION = False
 
+ENVIRONMENT_USERNAME = "rwareuser"
+CANARY_PDF_PATHS = [
+    f"C:\\Users\\{ENVIRONMENT_USERNAME}\\Downloads",
+    f"C:\\Users\\{ENVIRONMENT_USERNAME}\\Desktop",
+    f"C:\\Users\\{ENVIRONMENT_USERNAME}\\Documents"
+]
+
+CANARY_DOCX_PATHS = [
+    f"C:\\Users\\{ENVIRONMENT_USERNAME}\\Downloads",
+    f"C:\\Users\\{ENVIRONMENT_USERNAME}\\Desktop",
+    f"C:\\Users\\{ENVIRONMENT_USERNAME}\\Documents"
+]
+
+ENTROPY_PATHS = [
+    f"C:\\Users\\{ENVIRONMENT_USERNAME}\\Downloads",
+    f"C:\\Users\\{ENVIRONMENT_USERNAME}\\Desktop",
+    f"C:\\Users\\{ENVIRONMENT_USERNAME}\\Documents"
+]
 
 """
 This variable sets the maximum file size limit (in KB) for scanning file entropies.

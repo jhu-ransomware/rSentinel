@@ -12,6 +12,7 @@ import string
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
 import crypto_helper
+import constants
 
 logger = get_logger(__name__)
 
@@ -151,14 +152,14 @@ def execute_canary_logic():
         # Specify the full path for file generation
         pdf_paths = [
             os.path.join(
-                generate_random_location(["C:\\Users\\rSUser\\Downloads", "C:\\Users\\rSUser\\Desktop", "C:\\Users\\rSUser\\Documents"]),
+                generate_random_location(constants.CANARY_PDF_PATHS),
                 pdf_filename
             ) for pdf_filename in pdf_filenames
         ]
 
         docx_paths = [
             os.path.join(
-                generate_random_location(["C:\\Users\\rSUser\\Downloads", "C:\\Users\\rSUser\\Desktop", "C:\\Users\\rSUser\\Documents"]),
+                generate_random_location(constants.CANARY_DOCX_PATHS),
                 docx_filename.format(i)
             ) for i in range(6)  # Assuming 6 DOCX files
         ]
