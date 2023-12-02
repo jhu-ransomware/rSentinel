@@ -2,9 +2,11 @@ package main
 
 import (
 	"fmt"
+	"io/fs"
 	"log"
 	"math/rand"
 	"os"
+	"path/filepath"
 	"regexp"
 	"runtime"
 	"sync"
@@ -14,9 +16,9 @@ import (
 	"github.com/eciavatta/sdhash"
 )
 
-const defaultPath = `C:\Users\rSUser\Documents`
-const sampleSize = 100    // Adjust the sample size as needed
-const maxTotalFiles = 200 // Maximum total files to check
+const defaultPath = `C:\Users\rSUser\Documents` // Windows path
+const sampleSize = 100                          // Adjust the sample size as needed
+const maxTotalFiles = 200                       // Maximum total files to check
 
 func calculateSimilarity(filename1, filename2 string, wg *sync.WaitGroup, resultChan chan<- int) {
 	defer wg.Done()
@@ -53,11 +55,14 @@ func checkFilesInDirectory(directory string) int {
 		os.Exit(1)
 	}
 
+	// Convert the path separators to the appropriate format for the current OS
+	directory = filepath.FromSlash(directory)
+
 	// Create a map to store similar file names
 	similarFiles := make(map[string][]string)
 
-	// Define a regular expression to extract base name
-	baseNameRegex := regexp.MustCompile(`^(.+?)\..+?$`)
+	// Define a regular expression to extract base name (considering both Windows and Linux paths)
+	baseNameRegex := regexp.MustCompile(`^(.+?)[\\/].+?$`)
 
 	var wg sync.WaitGroup
 	resultChan := make(chan int)
@@ -65,6 +70,24 @@ func checkFilesInDirectory(directory string) int {
 	// Randomly sample files for comparison
 	rand.Seed(time.Now().UnixNano())
 	totalFiles := 0 // Counter for the total number of files checked
+
+	err := filepath.WalkDir(directory, func(path string, d fs.DirEntry, errWalk error) error {
+		if errWalk != nil {
+			// log.Printf("Error accessing %s: %v\n", path, errWalk)
+			return nil
+		}
+		if !d.IsDir() {
+			// Get the base name without considering multiple separators
+			baseName := baseNameRegex.ReplaceAllString(d.Name(), "$1")
+			similarFiles[baseName] = append(similarFiles[baseName], path)
+		}
+		return nil
+	})
+
+	if err != nil {
+		log.Printf("Error walking the directory: %v\n", err)
+		return -1
+	}
 
 	for _, files := range similarFiles {
 		if len(files) >= 2 {
