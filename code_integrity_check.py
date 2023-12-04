@@ -27,7 +27,7 @@ def generate_combined_hash():
     combined_hasher = hashlib.sha256()
     for root, _, files in os.walk(directory_path):
         for file in files:
-            if file.endswith('.py'):
+            if file.endswith('.py') and file != 'constants.py':
                 file_path = os.path.join(root, file)
                 file_hash = hash_file(file_path)
                 combined_hasher.update(file_hash.encode())  # Convert hexdigest back to bytes

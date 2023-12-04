@@ -52,10 +52,10 @@ def gen_CSR(private_key):
         x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, u"California"),
         x509.NameAttribute(NameOID.LOCALITY_NAME, u"San Francisco"),
         x509.NameAttribute(NameOID.ORGANIZATION_NAME, u"c0conut"),
-        x509.NameAttribute(NameOID.COMMON_NAME, u"10.0.0.5"),
+        x509.NameAttribute(NameOID.COMMON_NAME, u"{}".format(constants.CRYPTO_LIB_COMMON_NAME)),
     ])).add_extension(
         x509.SubjectAlternativeName([
-            x509.IPAddress(ipaddress.IPv4Address(u"10.0.0.5"))
+            x509.IPAddress(ipaddress.IPv4Address(u"{}".format(constants.CRYPTO_LIB_COMMON_NAME)))
         ]),
         critical=False,
     ).sign(private_key, hashes.SHA256())
