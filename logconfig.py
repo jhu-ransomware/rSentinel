@@ -26,12 +26,12 @@ class CustomFormatter(logging.Formatter):
 
 def get_logger(name):
     logger = logging.getLogger(name)
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.ERROR)
 
     # Check if the logger already has handlers to avoid duplicate messages
     if not logger.handlers:
         ch = logging.StreamHandler()
-        ch.setLevel(logging.INFO)
+        ch.setLevel(logging.ERROR)
         ch.setFormatter(CustomFormatter())
         logger.addHandler(ch)
 
